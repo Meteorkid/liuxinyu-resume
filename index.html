@@ -1128,86 +1128,51 @@ section { position: relative; }
 .fade-up-delay-3 { transition-delay: 0.3s; }
 
 /* ============ PDF DOWNLOAD STYLES ============ */
-.pdf-content {
-  background: #fff;
-  color: #1a1a1a;
-  font-family: 'Noto Sans SC', 'Inter', sans-serif;
+body.pdf-mode {
+  overflow: visible !important;
 }
 
-.pdf-content .hero {
-  background: #0d1117 !important;
+body.pdf-mode .hero {
   min-height: auto !important;
-  padding: 3rem 2rem !important;
+  padding: 2rem !important;
 }
 
-.pdf-content .terminal-window {
+body.pdf-mode .terminal-window {
   box-shadow: none !important;
-  border: 1px solid rgba(255,255,255,0.1);
 }
 
-.pdf-content .terminal-line {
+body.pdf-mode .terminal-line {
   opacity: 1 !important;
 }
 
-.pdf-content .terminal-skip,
-.pdf-content .hero-scroll,
-.pdf-content .hero-download,
-.pdf-content .scroll-progress,
-.pdf-content .cursor-glow,
-.pdf-content .back-to-top,
-.pdf-content .navbar {
-  display: none !important;
-}
-
-.pdf-content section {
+body.pdf-mode section {
   page-break-inside: avoid;
+  break-inside: avoid;
 }
 
-.pdf-content .project-card {
+body.pdf-mode .project-card {
   transform: none !important;
   box-shadow: 0 4px 20px rgba(0,0,0,0.1) !important;
 }
 
-.pdf-content .tl-item {
+body.pdf-mode .tl-item,
+body.pdf-mode .tl-card {
+  transform: none !important;
+}
+
+body.pdf-mode .fade-up,
+body.pdf-mode .tl-item,
+body.pdf-mode .github-card,
+body.pdf-mode .award-item,
+body.pdf-mode .skill-card,
+body.pdf-mode .skill-tag {
   opacity: 1 !important;
   transform: none !important;
+  transition: none !important;
 }
 
-.pdf-content .tl-card {
-  transform: none !important;
-}
-
-.pdf-content .github-card {
-  opacity: 1 !important;
-  transform: none !important;
-}
-
-.pdf-content .award-item {
-  opacity: 1 !important;
-  transform: none !important;
-}
-
-.pdf-content .skill-card {
-  opacity: 1 !important;
-  transform: none !important;
-}
-
-.pdf-content .skill-tag {
-  opacity: 1 !important;
-  transform: none !important;
-}
-
-.pdf-content .fade-up {
-  opacity: 1 !important;
-  transform: none !important;
-}
-
-.pdf-content .award-stat-number {
+body.pdf-mode .award-stat-number {
   -webkit-text-fill-color: #F4D758 !important;
-}
-
-.pdf-content .section-wave {
-  display: none !important;
 }
 
 /* PDF 生成中的加载提示 */
@@ -2223,50 +2188,36 @@ section { position: relative; }
 
     // 显示加载提示
     loading.classList.add('active');
+    document.body.style.overflow = 'hidden';
 
     // 等待一小段时间让动画完成
+    await new Promise(resolve => setTimeout(resolve, 200));
+
+    // 记录原始滚动位置
+    const originalScrollY = window.scrollY;
+
+    // 滚动到顶部
+    window.scrollTo(0, 0);
+
+    // 等待滚动完成
     await new Promise(resolve => setTimeout(resolve, 100));
 
-    // 克隆 body 内容
-    const originalBody = document.body;
-    const clonedBody = originalBody.cloneNode(true);
+    // 添加 PDF 模式类
+    document.body.classList.add('pdf-mode');
 
-    // 添加 PDF 样式类
-    clonedBody.classList.add('pdf-content');
-
-    // 移除不需要的元素
-    const removeSelectors = [
-      '.scroll-progress',
-      '.cursor-glow',
-      '.back-to-top',
-      '.pdf-loading',
-      '.terminal-skip',
-      '.hero-scroll',
-      '.hero-download',
-      '.navbar',
-      '.nav-overlay'
-    ];
-
-    removeSelectors.forEach(selector => {
-      const elements = clonedBody.querySelectorAll(selector);
-      elements.forEach(el => el.remove());
-    });
-
-    // 确保所有动画元素可见
-    const animatedElements = clonedBody.querySelectorAll('.fade-up, .tl-item, .github-card, .award-item, .skill-card, .skill-tag');
+    // 强制显示所有动画元素
+    const animatedElements = document.querySelectorAll('.fade-up, .tl-item, .github-card, .award-item, .skill-card, .skill-tag');
     animatedElements.forEach(el => {
+      el.classList.add('is-visible');
       el.style.opacity = '1';
       el.style.transform = 'none';
     });
 
-    // 创建临时容器
-    const tempContainer = document.createElement('div');
-    tempContainer.style.position = 'absolute';
-    tempContainer.style.left = '-9999px';
-    tempContainer.style.top = '0';
-    tempContainer.style.width = '1024px';
-    tempContainer.appendChild(clonedBody);
-    document.body.appendChild(tempContainer);
+    // 隐藏不需要的元素
+    const hideElements = document.querySelectorAll('.scroll-progress, .cursor-glow, .back-to-top, .pdf-loading, .terminal-skip, .hero-scroll, .hero-download, .navbar, .nav-overlay, .section-wave');
+    hideElements.forEach(el => {
+      el.style.display = 'none';
+    });
 
     // 配置 html2pdf 选项
     const opt = {
@@ -2277,7 +2228,10 @@ section { position: relative; }
         scale: 2,
         useCORS: true,
         letterRendering: true,
-        logging: false
+        logging: false,
+        scrollY: 0,
+        windowWidth: document.documentElement.scrollWidth,
+        windowHeight: document.documentElement.scrollHeight
       },
       jsPDF: {
         unit: 'mm',
@@ -2291,13 +2245,29 @@ section { position: relative; }
 
     try {
       // 生成 PDF
-      await html2pdf().set(opt).from(tempContainer).save();
+      await html2pdf().set(opt).from(document.body).save();
     } catch (error) {
       console.error('PDF 生成失败:', error);
       alert('PDF 生成失败，请稍后重试');
     } finally {
-      // 清理临时容器
-      document.body.removeChild(tempContainer);
+      // 恢复原始状态
+      document.body.classList.remove('pdf-mode');
+
+      // 恢复隐藏的元素
+      hideElements.forEach(el => {
+        el.style.display = '';
+      });
+
+      // 恢复动画元素状态
+      animatedElements.forEach(el => {
+        el.style.opacity = '';
+        el.style.transform = '';
+      });
+
+      // 恢复滚动位置
+      window.scrollTo(0, originalScrollY);
+      document.body.style.overflow = '';
+
       // 隐藏加载提示
       loading.classList.remove('active');
     }
