@@ -12,7 +12,6 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700;900&family=Caveat:wght@400;600&family=Inter:wght@300;400;600;800;900&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <style>
 /* ============ RESET & BASE ============ */
 *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
@@ -1175,6 +1174,74 @@ body.pdf-mode .award-stat-number {
   -webkit-text-fill-color: #F4D758 !important;
 }
 
+/* 打印专用样式 */
+@media print {
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  body {
+    overflow: visible !important;
+  }
+
+  .scroll-progress,
+  .cursor-glow,
+  .back-to-top,
+  .pdf-loading,
+  .terminal-skip,
+  .hero-scroll,
+  .hero-download,
+  .navbar,
+  .nav-overlay,
+  .section-wave {
+    display: none !important;
+  }
+
+  .hero {
+    min-height: auto !important;
+    padding: 2rem !important;
+  }
+
+  .terminal-window {
+    box-shadow: none !important;
+  }
+
+  .terminal-line {
+    opacity: 1 !important;
+  }
+
+  section {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  .project-card {
+    transform: none !important;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.1) !important;
+  }
+
+  .tl-item,
+  .tl-card {
+    transform: none !important;
+  }
+
+  .fade-up,
+  .tl-item,
+  .github-card,
+  .award-item,
+  .skill-card,
+  .skill-tag {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+
+  .award-stat-number {
+    -webkit-text-fill-color: #F4D758 !important;
+  }
+}
+
 /* PDF 生成中的加载提示 */
 .pdf-loading {
   position: fixed;
@@ -2179,98 +2246,39 @@ body.pdf-mode .award-stat-number {
 /* ============ PDF DOWNLOAD ============ */
 (function() {
   const downloadBtn = document.getElementById('heroDownload');
-  const loading = document.getElementById('pdfLoading');
-
   if (!downloadBtn) return;
 
-  downloadBtn.addEventListener('click', async (e) => {
+  downloadBtn.addEventListener('click', (e) => {
     e.preventDefault();
 
-    // 显示加载提示
-    loading.classList.add('active');
-    document.body.style.overflow = 'hidden';
-
-    // 等待一小段时间让动画完成
-    await new Promise(resolve => setTimeout(resolve, 200));
-
-    // 记录原始滚动位置
-    const originalScrollY = window.scrollY;
-
-    // 滚动到顶部
-    window.scrollTo(0, 0);
-
-    // 等待滚动完成
-    await new Promise(resolve => setTimeout(resolve, 100));
-
-    // 添加 PDF 模式类
-    document.body.classList.add('pdf-mode');
-
     // 强制显示所有动画元素
-    const animatedElements = document.querySelectorAll('.fade-up, .tl-item, .github-card, .award-item, .skill-card, .skill-tag');
-    animatedElements.forEach(el => {
+    document.querySelectorAll('.fade-up, .tl-item, .github-card, .award-item, .skill-card, .skill-tag').forEach(el => {
       el.classList.add('is-visible');
       el.style.opacity = '1';
       el.style.transform = 'none';
     });
 
     // 隐藏不需要的元素
-    const hideElements = document.querySelectorAll('.scroll-progress, .cursor-glow, .back-to-top, .pdf-loading, .terminal-skip, .hero-scroll, .hero-download, .navbar, .nav-overlay, .section-wave');
-    hideElements.forEach(el => {
+    document.querySelectorAll('.scroll-progress, .cursor-glow, .back-to-top, .pdf-loading, .terminal-skip, .hero-scroll, .hero-download, .navbar, .nav-overlay, .section-wave').forEach(el => {
       el.style.display = 'none';
     });
 
-    // 配置 html2pdf 选项
-    const opt = {
-      margin: [10, 10, 10, 10],
-      filename: '刘鑫宇_全栈开发工程师_简历.pdf',
-      image: { type: 'jpeg', quality: 0.98 },
-      html2canvas: {
-        scale: 2,
-        useCORS: true,
-        letterRendering: true,
-        logging: false,
-        scrollY: 0,
-        windowWidth: document.documentElement.scrollWidth,
-        windowHeight: document.documentElement.scrollHeight
-      },
-      jsPDF: {
-        unit: 'mm',
-        format: 'a4',
-        orientation: 'portrait'
-      },
-      pagebreak: {
-        mode: ['avoid-all', 'css', 'legacy']
-      }
-    };
+    // 调用浏览器打印
+    window.print();
 
-    try {
-      // 生成 PDF
-      await html2pdf().set(opt).from(document.body).save();
-    } catch (error) {
-      console.error('PDF 生成失败:', error);
-      alert('PDF 生成失败，请稍后重试');
-    } finally {
-      // 恢复原始状态
-      document.body.classList.remove('pdf-mode');
-
+    // 打印对话框关闭后恢复状态
+    setTimeout(() => {
       // 恢复隐藏的元素
-      hideElements.forEach(el => {
+      document.querySelectorAll('.scroll-progress, .cursor-glow, .back-to-top, .pdf-loading, .terminal-skip, .hero-scroll, .hero-download, .navbar, .nav-overlay, .section-wave').forEach(el => {
         el.style.display = '';
       });
 
       // 恢复动画元素状态
-      animatedElements.forEach(el => {
+      document.querySelectorAll('.fade-up, .tl-item, .github-card, .award-item, .skill-card, .skill-tag').forEach(el => {
         el.style.opacity = '';
         el.style.transform = '';
       });
-
-      // 恢复滚动位置
-      window.scrollTo(0, originalScrollY);
-      document.body.style.overflow = '';
-
-      // 隐藏加载提示
-      loading.classList.remove('active');
-    }
+    }, 1000);
   });
 })();
 </script>
