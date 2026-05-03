@@ -1,0 +1,1318 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>刘鑫宇 — 计算机科学与技术 · 全栈开发 & 新媒体创作者</title>
+<meta name="description" content="刘鑫宇的个人简历网站。广东技术师范大学国际教育学院2024级计算机科学与技术专业学生。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700;900&family=Caveat:wght@400;600&family=Inter:wght@300;400;600;800;900&display=swap" rel="stylesheet">
+<style>
+/* ============ RESET & BASE ============ */
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; font-size: 16px; overflow-x: hidden; }
+body {
+  font-family: 'Noto Sans SC', 'Inter', sans-serif;
+  color: #1a1a1a;
+  background: #fefcf6;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+::selection { background: #F4D758; color: #1a1a1a; }
+
+/* ============ CUSTOM CURSOR GLOW ============ */
+.cursor-glow {
+  position: fixed;
+  width: 320px; height: 320px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(244,215,88,0.12) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 9999;
+  transform: translate(-50%, -50%);
+  transition: opacity 0.3s;
+  opacity: 0;
+}
+body:hover .cursor-glow { opacity: 1; }
+
+/* ============ SECTION COMMON ============ */
+section { position: relative; }
+.section-label {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: #999;
+  margin-bottom: 2rem;
+}
+
+/* ============ NAVBAR ============ */
+.navbar {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 100;
+  padding: 1rem 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: background 0.3s, box-shadow 0.3s;
+}
+.navbar.scrolled {
+  background: rgba(254,252,246,0.95);
+  backdrop-filter: blur(12px);
+  box-shadow: 0 2px 20px rgba(0,0,0,0.06);
+}
+.navbar-logo {
+  font-weight: 800;
+  font-size: 1.1rem;
+  color: #1a1a1a;
+  text-decoration: none;
+}
+.navbar-links {
+  display: flex;
+  gap: 2rem;
+  list-style: none;
+}
+.navbar-links a {
+  text-decoration: none;
+  color: #666;
+  font-size: 0.85rem;
+  font-weight: 500;
+  transition: color 0.2s;
+}
+.navbar-links a:hover { color: #2B7FD8; }
+@media (max-width: 768px) {
+  .navbar-links { gap: 1rem; }
+  .navbar-links a { font-size: 0.75rem; }
+}
+
+/* ============ HERO — TERMINAL STYLE ============ */
+.hero {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background: #0d1117;
+  position: relative;
+  overflow: hidden;
+  padding: 2rem;
+}
+
+.terminal-window {
+  width: 100%;
+  max-width: 720px;
+  background: #161b22;
+  border-radius: 12px;
+  box-shadow: 0 20px 80px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.06);
+  overflow: hidden;
+  position: relative;
+  z-index: 2;
+}
+.terminal-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 18px;
+  background: #1c2129;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+.terminal-dot { width: 12px; height: 12px; border-radius: 50%; }
+.terminal-dot--red { background: #ff5f57; }
+.terminal-dot--yellow { background: #febc2e; }
+.terminal-dot--green { background: #28c840; }
+.terminal-header-title {
+  flex: 1;
+  text-align: center;
+  font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+  font-size: 0.75rem;
+  color: rgba(255,255,255,0.35);
+  margin-right: 52px;
+}
+
+.terminal-body {
+  padding: 1.8rem 2rem 2.5rem;
+  font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+  font-size: clamp(0.85rem, 1.8vw, 1rem);
+  line-height: 1.8;
+  min-height: 360px;
+}
+.terminal-line { opacity: 0; white-space: pre-wrap; word-break: break-all; }
+.terminal-line.visible { opacity: 1; }
+.terminal-line .cmd { color: #2B7FD8; }
+.terminal-line .cmd-text { color: #8b949e; }
+.terminal-line .output { color: #F4D758; }
+.terminal-line .highlight { color: #28c840; }
+.terminal-line .link {
+  color: #F7A946;
+  text-decoration: underline;
+  text-decoration-style: dotted;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+.terminal-line .emoji { color: #fff; }
+
+.terminal-cursor {
+  display: inline-block;
+  width: 0.6em;
+  height: 1.15em;
+  background: #F4D758;
+  vertical-align: text-bottom;
+  animation: cursorBlink 1s step-end infinite;
+}
+@keyframes cursorBlink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 0.8; transform: translateY(0); }
+}
+
+.hero-scroll {
+  position: absolute;
+  bottom: 3rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  opacity: 0;
+  animation: fadeUp 0.6s 8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+.hero-scroll span {
+  font-size: 0.65rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.4);
+}
+.hero-scroll-line {
+  width: 1px; height: 40px;
+  background: #F4D758;
+  opacity: 0.4;
+  animation: scrollPulse 2s ease-in-out infinite;
+}
+@keyframes scrollPulse {
+  0%, 100% { transform: scaleY(1); opacity: 0.3; }
+  50% { transform: scaleY(1.5); opacity: 0.6; }
+}
+
+/* ============ ABOUT ============ */
+.about {
+  padding: 8rem 2rem;
+  background: linear-gradient(180deg, #fffef8 0%, #fefcf0 100%);
+}
+.about-inner { max-width: 1000px; margin: 0 auto; }
+.about .section-label { text-align: center; }
+.about-headline {
+  font-weight: 800;
+  font-size: clamp(2rem, 5vw, 3rem);
+  text-align: center;
+  margin-bottom: 4rem;
+  line-height: 1.3;
+  letter-spacing: -0.02em;
+}
+.about-headline em { font-style: normal; color: #2B7FD8; }
+
+.about-grid {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 4rem;
+  align-items: start;
+}
+@media (max-width: 768px) {
+  .about-grid { grid-template-columns: 1fr; gap: 2.5rem; }
+}
+
+.about-avatar {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+.avatar-circle {
+  width: 200px; height: 200px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #2B7FD8, #6C5CE7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 64px;
+  color: #fff;
+  font-weight: 900;
+  box-shadow: 0 8px 40px rgba(43,127,216,0.25);
+  overflow: hidden;
+}
+.avatar-circle img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.avatar-name {
+  font-weight: 700;
+  font-size: 1.2rem;
+}
+.avatar-school {
+  font-size: 0.85rem;
+  color: #888;
+  text-align: center;
+}
+
+.about-info { display: flex; flex-direction: column; gap: 1.5rem; }
+.about-bio {
+  font-size: 1rem;
+  line-height: 1.8;
+  color: #444;
+}
+.about-highlights {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+.highlight-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.8rem;
+  font-size: 0.95rem;
+  color: #555;
+  line-height: 1.5;
+}
+.highlight-item::before {
+  content: '▸';
+  color: #2B7FD8;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+/* ============ EXPERIENCE (TIMELINE) ============ */
+.experience {
+  padding: 8rem 2rem;
+  background: #fefcf6;
+}
+.experience-inner { max-width: 900px; margin: 0 auto; }
+.experience .section-label { text-align: center; }
+.experience-headline {
+  font-weight: 800;
+  font-size: clamp(2rem, 5vw, 3rem);
+  text-align: center;
+  margin-bottom: 5rem;
+  line-height: 1.3;
+  letter-spacing: -0.02em;
+}
+.experience-headline em { font-style: normal; color: #2B7FD8; }
+
+.timeline {
+  position: relative;
+  padding-left: 3rem;
+}
+.timeline::before {
+  content: '';
+  position: absolute;
+  left: 6px;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: linear-gradient(to bottom, #F4D758, #2B7FD8, #F7A946, #6C5CE7);
+}
+.tl-item {
+  position: relative;
+  margin-bottom: 3rem;
+  opacity: 0;
+  transform: translateX(-20px);
+  transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.tl-item.is-visible { opacity: 1; transform: translateX(0); }
+.tl-item::before {
+  content: '';
+  position: absolute;
+  left: -3rem;
+  top: 0.5rem;
+  width: 14px; height: 14px;
+  border-radius: 50%;
+  border: 3px solid #F4D758;
+  background: #fefcf6;
+  z-index: 1;
+  transition: all 0.3s;
+}
+.tl-item:nth-child(2)::before { border-color: #2B7FD8; }
+.tl-item:nth-child(3)::before { border-color: #F7A946; }
+.tl-item:nth-child(4)::before { border-color: #6C5CE7; }
+.tl-item:nth-child(5)::before { border-color: #28c840; }
+
+.tl-item.is-visible::before {
+  background: #F4D758;
+  box-shadow: 0 0 0 6px rgba(244,215,88,0.2);
+}
+.tl-item:nth-child(2).is-visible::before { background: #2B7FD8; box-shadow: 0 0 0 6px rgba(43,127,216,0.2); }
+.tl-item:nth-child(3).is-visible::before { background: #F7A946; box-shadow: 0 0 0 6px rgba(247,169,70,0.2); }
+.tl-item:nth-child(4).is-visible::before { background: #6C5CE7; box-shadow: 0 0 0 6px rgba(108,92,231,0.2); }
+.tl-item:nth-child(5).is-visible::before { background: #28c840; box-shadow: 0 0 0 6px rgba(40,200,64,0.2); }
+
+.tl-year {
+  font-weight: 900;
+  font-size: 0.8rem;
+  letter-spacing: 0.15em;
+  color: #999;
+  margin-bottom: 0.3rem;
+}
+.tl-title {
+  font-weight: 700;
+  font-size: 1.3rem;
+  margin-bottom: 0.3rem;
+  line-height: 1.3;
+}
+.tl-desc {
+  font-weight: 300;
+  font-size: 0.95rem;
+  color: #666;
+  line-height: 1.6;
+}
+
+/* ============ PROJECTS ============ */
+.projects {
+  padding: 10rem 2rem;
+  background: #fefcf6;
+}
+.projects-inner { max-width: 1100px; margin: 0 auto; }
+.projects .section-label { text-align: center; }
+.projects-headline {
+  font-weight: 800;
+  font-size: clamp(2rem, 5vw, 3rem);
+  text-align: center;
+  margin-bottom: 5rem;
+  letter-spacing: -0.02em;
+}
+
+.project-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2.5rem;
+}
+@media (max-width: 768px) {
+  .project-grid { grid-template-columns: 1fr; }
+}
+
+.project-card {
+  border-radius: 24px;
+  padding: 2.5rem;
+  min-height: 360px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  position: relative;
+  overflow: hidden;
+  cursor: default;
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.4s;
+}
+.project-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 30px 80px rgba(0,0,0,0.12);
+}
+
+.project-card--1 { background: linear-gradient(135deg, #F4D758 0%, #F7A946 100%); }
+.project-card--2 { background: linear-gradient(135deg, #2B7FD8 0%, #1a5fa0 100%); color: #fff; }
+.project-card--3 { background: linear-gradient(135deg, #6C5CE7 0%, #a55eea 100%); color: #fff; }
+.project-card--4 { background: linear-gradient(135deg, #28c840 0%, #1a9c30 100%); color: #fff; }
+
+.project-card-bg-text {
+  font-weight: 900;
+  font-size: clamp(4rem, 10vw, 7rem);
+  position: absolute;
+  top: 1rem;
+  right: 1.5rem;
+  opacity: 0.08;
+  line-height: 1;
+  pointer-events: none;
+}
+
+.project-card-content { position: relative; z-index: 1; }
+.project-card-emoji { font-size: 2rem; margin-bottom: 0.8rem; }
+.project-card-title {
+  font-weight: 800;
+  font-size: 1.4rem;
+  margin-bottom: 0.5rem;
+  line-height: 1.2;
+}
+.project-card-desc {
+  font-weight: 300;
+  font-size: 0.9rem;
+  line-height: 1.6;
+  opacity: 0.9;
+}
+.project-card-tag {
+  display: inline-block;
+  margin-top: 1rem;
+  padding: 0.3rem 0.9rem;
+  border-radius: 100px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+}
+.project-card--1 .project-card-tag { background: rgba(26,26,26,0.12); color: #1a1a1a; }
+.project-card--2 .project-card-tag { background: rgba(255,255,255,0.2); color: #fff; }
+.project-card--3 .project-card-tag { background: rgba(255,255,255,0.2); color: #fff; }
+.project-card--4 .project-card-tag { background: rgba(255,255,255,0.2); color: #fff; }
+
+/* ============ GITHUB PROJECTS ============ */
+.github-section {
+  padding: 6rem 2rem;
+  background: #f5f2ea;
+}
+.github-inner { max-width: 1100px; margin: 0 auto; }
+.github-section .section-label { text-align: center; }
+.github-headline {
+  font-weight: 800;
+  font-size: clamp(1.8rem, 4vw, 2.5rem);
+  text-align: center;
+  margin-bottom: 3rem;
+}
+.github-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.5rem;
+}
+.github-card {
+  background: #fff;
+  border-radius: 16px;
+  padding: 1.8rem;
+  border: 1px solid #e8e4dc;
+  transition: transform 0.3s, box-shadow 0.3s;
+  text-decoration: none;
+  color: inherit;
+  display: block;
+}
+.github-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 40px rgba(0,0,0,0.08);
+}
+.github-card-name {
+  font-weight: 700;
+  font-size: 1rem;
+  color: #2B7FD8;
+  margin-bottom: 0.4rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.github-card-desc {
+  font-size: 0.85rem;
+  color: #888;
+  line-height: 1.5;
+}
+.github-card-meta {
+  margin-top: 0.8rem;
+  font-size: 0.75rem;
+  color: #aaa;
+}
+
+/* ============ AWARDS ============ */
+.awards {
+  padding: 8rem 2rem;
+  background: #fefcf6;
+}
+.awards-inner { max-width: 1000px; margin: 0 auto; }
+.awards .section-label { text-align: center; }
+.awards-headline {
+  font-weight: 800;
+  font-size: clamp(2rem, 5vw, 3rem);
+  text-align: center;
+  margin-bottom: 4rem;
+  letter-spacing: -0.02em;
+}
+
+.award-group {
+  margin-bottom: 3rem;
+}
+.award-group-title {
+  font-weight: 800;
+  font-size: 1.1rem;
+  margin-bottom: 1.2rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid;
+  display: inline-block;
+}
+.award-group--province .award-group-title { color: #2B7FD8; border-color: #2B7FD8; }
+.award-group--city .award-group-title { color: #F7A946; border-color: #F7A946; }
+.award-group--school .award-group-title { color: #6C5CE7; border-color: #6C5CE7; }
+.award-group--college .award-group-title { color: #28c840; border-color: #28c840; }
+
+.award-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+.award-item {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+  padding: 1rem 1.2rem;
+  background: #fff;
+  border-radius: 12px;
+  border: 1px solid #e8e4dc;
+  transition: transform 0.2s;
+}
+.award-item:hover { transform: translateX(4px); }
+.award-badge {
+  flex-shrink: 0;
+  width: 36px; height: 36px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  font-weight: 900;
+  color: #fff;
+}
+.award-group--province .award-badge { background: #2B7FD8; }
+.award-group--city .award-badge { background: #F7A946; }
+.award-group--school .award-badge { background: #6C5CE7; }
+.award-group--college .award-badge { background: #28c840; }
+.award-info { flex: 1; }
+.award-title {
+  font-weight: 600;
+  font-size: 0.95rem;
+  margin-bottom: 0.2rem;
+}
+.award-detail {
+  font-size: 0.8rem;
+  color: #888;
+}
+
+/* ============ SKILLS ============ */
+.skills {
+  padding: 8rem 2rem;
+  background: #f5f2ea;
+}
+.skills-inner { max-width: 1000px; margin: 0 auto; }
+.skills .section-label { text-align: center; }
+.skills-headline {
+  font-weight: 800;
+  font-size: clamp(2rem, 5vw, 3rem);
+  text-align: center;
+  margin-bottom: 4rem;
+}
+
+.skills-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1.5rem;
+}
+.skill-card {
+  background: #fff;
+  border-radius: 16px;
+  padding: 2rem;
+  border: 1px solid #e8e4dc;
+  transition: transform 0.3s, box-shadow 0.3s;
+}
+.skill-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 40px rgba(0,0,0,0.06);
+}
+.skill-card-icon { font-size: 2rem; margin-bottom: 0.8rem; }
+.skill-card-title { font-weight: 700; font-size: 1rem; margin-bottom: 0.8rem; }
+.skill-tags { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.skill-tag {
+  font-size: 0.75rem;
+  padding: 0.3rem 0.7rem;
+  border-radius: 100px;
+  background: #f0ebe3;
+  color: #666;
+  font-weight: 500;
+}
+
+/* ============ CONTACT ============ */
+.contact {
+  background: #1a2332;
+  color: #fff;
+  padding: 8rem 2rem;
+  text-align: center;
+}
+.contact-inner { max-width: 600px; margin: 0 auto; }
+.contact-headline {
+  font-weight: 800;
+  font-size: clamp(2rem, 5vw, 3rem);
+  margin-bottom: 1rem;
+  letter-spacing: -0.02em;
+}
+.contact-sub {
+  font-family: 'Caveat', cursive;
+  font-size: 1.3rem;
+  opacity: 0.5;
+  margin-bottom: 3rem;
+}
+.contact-links {
+  display: flex;
+  justify-content: center;
+  gap: 2.5rem;
+  flex-wrap: wrap;
+  margin-bottom: 3rem;
+}
+.contact-link {
+  color: #fff;
+  text-decoration: none;
+  font-size: 0.95rem;
+  font-weight: 400;
+  opacity: 0.7;
+  transition: all 0.3s;
+  position: relative;
+  padding-bottom: 4px;
+}
+.contact-link::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0;
+  width: 0; height: 1px;
+  background: #F4D758;
+  transition: width 0.3s;
+}
+.contact-link:hover { opacity: 1; }
+.contact-link:hover::after { width: 100%; }
+.contact-quote {
+  font-weight: 300;
+  font-size: 0.85rem;
+  opacity: 0.35;
+  line-height: 1.8;
+}
+
+/* Footer */
+.footer {
+  background: #1a2332;
+  border-top: 1px solid rgba(255,255,255,0.06);
+  padding: 2rem;
+  text-align: center;
+}
+.footer p {
+  font-size: 0.7rem;
+  color: rgba(255,255,255,0.2);
+  letter-spacing: 0.1em;
+}
+
+/* ============ RESPONSIVE ============ */
+@media (max-width: 768px) {
+  .project-grid { grid-template-columns: 1fr; gap: 2rem; }
+  .project-card { min-height: 280px; padding: 2rem; }
+  .timeline { padding-left: 2.5rem; }
+  .timeline::before { left: 4px; }
+  .tl-item::before { left: -2.5rem; width: 10px; height: 10px; }
+  .work-card { flex: 0 0 280px; }
+  .contact-links { gap: 1.5rem; }
+  .terminal-window { border-radius: 8px; }
+  .terminal-body { padding: 1.2rem 1rem 2rem; font-size: 0.8rem; min-height: 280px; }
+  .terminal-header-title { display: none; }
+  .github-grid { grid-template-columns: 1fr; }
+}
+
+/* ============ ANIMATIONS ============ */
+.fade-up {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.fade-up.is-visible { opacity: 1; transform: translateY(0); }
+.fade-up-delay-1 { transition-delay: 0.1s; }
+.fade-up-delay-2 { transition-delay: 0.2s; }
+.fade-up-delay-3 { transition-delay: 0.3s; }
+</style>
+</head>
+<body>
+
+<!-- Cursor glow -->
+<div class="cursor-glow" id="cursorGlow"></div>
+
+<!-- ==================== NAVBAR ==================== -->
+<nav class="navbar" id="navbar">
+  <a href="#" class="navbar-logo">刘鑫宇</a>
+  <ul class="navbar-links">
+    <li><a href="#about">关于</a></li>
+    <li><a href="#experience">经历</a></li>
+    <li><a href="#projects">项目</a></li>
+    <li><a href="#awards">获奖</a></li>
+    <li><a href="#skills">技能</a></li>
+    <li><a href="#contact">联系</a></li>
+  </ul>
+</nav>
+
+<!-- ==================== HERO — TERMINAL ==================== -->
+<section class="hero">
+  <div class="terminal-window">
+    <div class="terminal-header">
+      <div class="terminal-dot terminal-dot--red"></div>
+      <div class="terminal-dot terminal-dot--yellow"></div>
+      <div class="terminal-dot terminal-dot--green"></div>
+      <div class="terminal-header-title">liuxinyu@gdstnu ~ %</div>
+    </div>
+    <div class="terminal-body" id="terminalBody">
+      <!-- Lines injected by JS typewriter -->
+    </div>
+  </div>
+  <div class="hero-scroll">
+    <span>Scroll</span>
+    <div class="hero-scroll-line"></div>
+  </div>
+</section>
+
+<!-- ==================== ABOUT ==================== -->
+<section class="about" id="about">
+  <div class="about-inner">
+    <p class="section-label fade-up">About Me</p>
+    <h2 class="about-headline fade-up">技术与创意的<em>交叉探索者</em></h2>
+
+    <div class="about-grid fade-up">
+      <div class="about-avatar">
+        <div class="avatar-circle"><img src="大头照.jpg" alt="刘鑫宇"></div>
+        <div class="avatar-name">刘鑫宇</div>
+        <div class="avatar-school">广东技术师范大学<br>国际教育学院 · 2024级<br>计算机科学与技术</div>
+      </div>
+
+      <div class="about-info">
+        <p class="about-bio">
+          我是刘鑫宇，广东技术师范大学国际教育学院 2024 级计算机科学与技术专业学生。现任学院科创部负责人，曾任新媒体信息部代理部长、组织委员、街舞社副社长等职务。热衷于小程序开发、Python 数据分析与新媒体视觉设计，在技术与创意的交叉领域持续探索——既写代码也做设计。
+        </p>
+        <div class="about-highlights">
+          <div class="highlight-item">省级大创立项项目核心成员，负责小程序前端开发</div>
+          <div class="highlight-item">Python 数据爬取与分析，单项目处理数据量 10,000+</div>
+          <div class="highlight-item">学院新媒体信息部骨干，单条视频点击量突破 30,000</div>
+          <div class="highlight-item">累计获省级 / 市级 / 校级 / 院级奖项 20+ 项</div>
+          <div class="highlight-item">3 段实习经历（新西兰 / 广州 / 佛山），具备跨文化协作能力</div>
+          <div class="highlight-item">GitHub 开源项目贡献，涵盖 AI 工具链、跨境电商、代码分析</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== EXPERIENCE ==================== -->
+<section class="experience" id="experience">
+  <div class="experience-inner">
+    <p class="section-label fade-up">Experience</p>
+    <h2 class="experience-headline fade-up">实习与<em>成长轨迹</em></h2>
+
+    <div class="timeline">
+      <div class="tl-item">
+        <div class="tl-year">2025.08 — 2025.09</div>
+        <div class="tl-title">佛山红云科技有限公司</div>
+        <div class="tl-desc">线下技术实习，参与实际项目开发，积累企业级开发经验</div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-year">2025.07 — 2025.08</div>
+        <div class="tl-title">玉汝于成（广州）跨境电商有限公司</div>
+        <div class="tl-desc">线上实习，负责 Python 市场数据爬取与分析（10,000+ 条），开发数据可视化模块，参与前端原型设计</div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-year">2025.04 — 2025.06</div>
+        <div class="tl-title">《韶域文化环》小程序开发</div>
+        <div class="tl-desc">核心开发成员，负责前端界面与多设备适配。项目获省赛铜奖、校赛一等奖、挑战杯银奖</div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-year">2024.12 — 2025.02</div>
+        <div class="tl-title">新西兰携舟科技有限公司</div>
+        <div class="tl-desc">线上实习，开启第一段技术工作经历，锻炼跨文化远程协作能力</div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-year">2024.09 — 至今</div>
+        <div class="tl-title">入学广东技术师范大学</div>
+        <div class="tl-desc">进入国际教育学院计算机科学与技术专业，先后加入新媒体信息部、科创部，现任科创部负责人</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== PROJECTS ==================== -->
+<section class="projects" id="projects">
+  <div class="projects-inner">
+    <p class="section-label fade-up">Projects</p>
+    <h2 class="projects-headline fade-up">核心项目作品</h2>
+
+    <div class="project-grid">
+      <div class="project-card project-card--1 fade-up">
+        <div class="project-card-bg-text">韶域</div>
+        <div class="project-card-content">
+          <div class="project-card-emoji">🏛️</div>
+          <h3 class="project-card-title">韶域文化环</h3>
+          <p class="project-card-desc">韶关文化国际化传播小程序。使用微信小程序框架开发前端界面，采用模块化开发方式，解决多设备适配问题。获省赛铜奖、校赛一等奖、挑战杯银奖。</p>
+          <span class="project-card-tag">微信小程序 · 前端开发</span>
+        </div>
+      </div>
+
+      <div class="project-card project-card--2 fade-up fade-up-delay-1">
+        <div class="project-card-bg-text">玉汝</div>
+        <div class="project-card-content">
+          <div class="project-card-emoji">💎</div>
+          <h3 class="project-card-title">玉汝于成跨境电商平台</h3>
+          <p class="project-card-desc">使用 Python 进行市场数据爬取与分析，处理数据量 10,000+ 条。开发数据可视化模块，参与前端原型设计，辅助团队完成技术可行性评估。省级立项。</p>
+          <span class="project-card-tag">Python · 数据分析 · 可视化</span>
+        </div>
+      </div>
+
+      <div class="project-card project-card--3 fade-up fade-up-delay-2">
+        <div class="project-card-bg-text">AI</div>
+        <div class="project-card-content">
+          <div class="project-card-emoji">🤖</div>
+          <h3 class="project-card-title">AI 科普作品创作</h3>
+          <p class="project-card-desc">广东省首届"AI科普+"创意与应用大赛获奖作品：《境外消费保命攻略》《三分钟学会避雷非法集资》《天文地理》AI 微笑小程序。</p>
+          <span class="project-card-tag">AI 应用 · 科普创作 · 小程序</span>
+        </div>
+      </div>
+
+      <div class="project-card project-card--4 fade-up fade-up-delay-3">
+        <div class="project-card-bg-text">智培</div>
+        <div class="project-card-content">
+          <div class="project-card-emoji">🎓</div>
+          <h3 class="project-card-title">智培未来 — AI 启航计划</h3>
+          <p class="project-card-desc">新一代 AI 启航计划教育实践项目。获挑战杯院赛特等奖、校赛金奖，致力于将 AI 技术应用于教育场景。</p>
+          <span class="project-card-tag">AI 教育 · 创新创业</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== GITHUB ==================== -->
+<section class="github-section" id="github">
+  <div class="github-inner">
+    <p class="section-label fade-up">Open Source</p>
+    <h2 class="github-headline fade-up">GitHub 开源项目</h2>
+
+    <div class="github-grid">
+      <a href="https://github.com/Meteorkid/Imagent-X-manus" target="_blank" class="github-card fade-up">
+        <div class="github-card-name">⚡ Imagent-X-manus</div>
+        <div class="github-card-desc">完整的 AI 智能体平台，集成 OpenManus 技术。前端 Next.js 14 + 后端 Spring Boot 3 + PostgreSQL 15，支持 RAG 知识库、多模态 AI、智能体工作流编排、Docker 容器化部署。</div>
+        <div class="github-card-meta">Java · Next.js · Docker · MIT · v1.0.3</div>
+      </a>
+      <a href="https://github.com/Meteorkid/statux" target="_blank" class="github-card fade-up">
+        <div class="github-card-name">📊 statux</div>
+        <div class="github-card-desc">Claude Code 和 iTerm2 的 AI Agent 状态显示工具。在终端中展示模型信息、上下文用量、Git 分支、Token 计数、费用和速率限制，支持 iTerm2 状态栏插件。</div>
+        <div class="github-card-meta">TypeScript · Bun · iTerm2 · MIT</div>
+      </a>
+      <a href="https://github.com/Meteorkid/cursor-source-analyzer" target="_blank" class="github-card fade-up">
+        <div class="github-card-name">🔍 cursor-source-analyzer</div>
+        <div class="github-card-desc">交互式可视化分析 Cursor AI 代码编辑器的内部架构、AI 集成机制、代码库索引系统和上下文管理。</div>
+        <div class="github-card-meta">分析工具 · 2026-05</div>
+      </a>
+      <a href="https://github.com/Meteorkid/nanyu-consumer-site" target="_blank" class="github-card fade-up">
+        <div class="github-card-name">🛍️ nanyu-consumer-site</div>
+        <div class="github-card-desc">面向东南亚市场的玉石品牌电商平台。Next.js 16 + TypeScript + Tailwind CSS v4，支持商品展示、内容种草、3D 展示、售后保障与 GA4 埋点。</div>
+        <div class="github-card-meta">Next.js 16 · TypeScript · Tailwind v4</div>
+      </a>
+      <a href="https://github.com/Meteorkid/yuan-website" target="_blank" class="github-card fade-up">
+        <div class="github-card-name">🌐 yuan-website</div>
+        <div class="github-card-desc">个人作品集网站，采用 Aceternity UI 组件库，包含 Hero 动效、Bento Grid 技术栈展示、无限滚动获奖卡片、项目筛选等交互效果。</div>
+        <div class="github-card-meta">Next.js · Tailwind CSS · Framer Motion</div>
+      </a>
+      <a href="https://github.com/Meteorkid/Tollow" target="_blank" class="github-card fade-up">
+        <div class="github-card-name">⌨️ Tollow</div>
+        <div class="github-card-desc">打字练习网站，支持 .txt / .epub 文件导入，像临摹字帖一样边看边打。提供实时 WPM、准确率、错误检测等统计功能。</div>
+        <div class="github-card-meta">React 18 · TypeScript · Vite · MIT</div>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== AWARDS ==================== -->
+<section class="awards" id="awards">
+  <div class="awards-inner">
+    <p class="section-label fade-up">Awards & Honors</p>
+    <h2 class="awards-headline fade-up">获奖荣誉</h2>
+
+    <!-- 省级 -->
+    <div class="award-group award-group--province fade-up">
+      <div class="award-group-title">省级奖项</div>
+      <div class="award-list">
+        <div class="award-item">
+          <div class="award-badge">三</div>
+          <div class="award-info">
+            <div class="award-title">广东省首届"AI科普+"创意与应用大赛 · AI科普作品创作赛季</div>
+            <div class="award-detail">《境外消费「保命攻略」》三等奖 · 2025.09</div>
+          </div>
+        </div>
+        <div class="award-item">
+          <div class="award-badge">优</div>
+          <div class="award-info">
+            <div class="award-title">广东省首届"AI科普+"创意与应用大赛 · AI科普作品创作赛季</div>
+            <div class="award-detail">《三分钟学会避雷非法集资》优秀奖 · 2025.09</div>
+          </div>
+        </div>
+        <div class="award-item">
+          <div class="award-badge">二</div>
+          <div class="award-info">
+            <div class="award-title">广东省首届"AI科普+"创意与应用大赛 · AI微笑小程序编程赛季</div>
+            <div class="award-detail">《天文地理》二等奖</div>
+          </div>
+        </div>
+        <div class="award-item">
+          <div class="award-badge">铜</div>
+          <div class="award-info">
+            <div class="award-title">第十五届"创新、创意及创业"挑战赛</div>
+            <div class="award-detail">《韶域文化环》省赛铜奖 · 2025.04</div>
+          </div>
+        </div>
+        <div class="award-item">
+          <div class="award-badge">立</div>
+          <div class="award-info">
+            <div class="award-title">大学生创新创业训练项目</div>
+            <div class="award-detail">省级立项 · 2025</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 市级 -->
+    <div class="award-group award-group--city fade-up">
+      <div class="award-group-title">市级奖项</div>
+      <div class="award-list">
+        <div class="award-item">
+          <div class="award-badge">三</div>
+          <div class="award-info">
+            <div class="award-title">南雄市"青聚百千万·双百共振兴"</div>
+            <div class="award-detail">三等奖 · 2025</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 校级 -->
+    <div class="award-group award-group--school fade-up">
+      <div class="award-group-title">校级奖项</div>
+      <div class="award-list">
+        <div class="award-item">
+          <div class="award-badge">金</div>
+          <div class="award-info">
+            <div class="award-title">第十五届挑战杯</div>
+            <div class="award-detail">《码上开悟——新一代AI启航计划代教育实践者》校赛金奖 · 2026.01</div>
+          </div>
+        </div>
+        <div class="award-item">
+          <div class="award-badge">银</div>
+          <div class="award-info">
+            <div class="award-title">第十五届挑战杯</div>
+            <div class="award-detail">《韶域文化环》校赛银奖 · 2026.01</div>
+          </div>
+        </div>
+        <div class="award-item">
+          <div class="award-badge">一</div>
+          <div class="award-info">
+            <div class="award-title">中国国际创新大赛（2025）</div>
+            <div class="award-detail">《韶域文化环》校赛一等奖 · 2025.06</div>
+          </div>
+        </div>
+        <div class="award-item">
+          <div class="award-badge">一</div>
+          <div class="award-info">
+            <div class="award-title">第十五届全国大学生电子商务"创新、创意及创业"挑战赛</div>
+            <div class="award-detail">《韶域文化环》校赛一等奖</div>
+          </div>
+        </div>
+        <div class="award-item">
+          <div class="award-badge">一</div>
+          <div class="award-info">
+            <div class="award-title">（中国——新西兰）中新文旅短视频竞赛</div>
+            <div class="award-detail">一等奖 · 2025.01</div>
+          </div>
+        </div>
+        <div class="award-item">
+          <div class="award-badge">铜</div>
+          <div class="award-info">
+            <div class="award-title">第十四届"挑战杯"大学生创新创业计划竞赛</div>
+            <div class="award-detail">《韶域文化环》校赛铜奖 · 2024</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 院级 -->
+    <div class="award-group award-group--college fade-up">
+      <div class="award-group-title">院级奖项</div>
+      <div class="award-list">
+        <div class="award-item">
+          <div class="award-badge">特</div>
+          <div class="award-info">
+            <div class="award-title">第十五届挑战杯院赛</div>
+            <div class="award-detail">《智培未来——新一代AI启航计划代教育实践者》特等奖 · 2025.10</div>
+          </div>
+        </div>
+        <div class="award-item">
+          <div class="award-badge">一</div>
+          <div class="award-info">
+            <div class="award-title">中国国际创新大赛（2025）院赛</div>
+            <div class="award-detail">《韶域文化环》一等奖 · 2025.06</div>
+          </div>
+        </div>
+        <div class="award-item">
+          <div class="award-badge">二</div>
+          <div class="award-info">
+            <div class="award-title">中国国际创新大赛（2025）院赛</div>
+            <div class="award-detail">《玉汝于成 全球幻彩——中国玉在跨境市场中的璀璨破圈》二等奖 · 2025.06</div>
+          </div>
+        </div>
+        <div class="award-item">
+          <div class="award-badge">一</div>
+          <div class="award-info">
+            <div class="award-title">国际教育学院第二届英语配音比赛</div>
+            <div class="award-detail">一等奖 · 2025</div>
+          </div>
+        </div>
+        <div class="award-item">
+          <div class="award-badge">三</div>
+          <div class="award-info">
+            <div class="award-title">职业规划大赛</div>
+            <div class="award-detail">三等奖</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== SKILLS ==================== -->
+<section class="skills" id="skills">
+  <div class="skills-inner">
+    <p class="section-label fade-up">Tech Stack</p>
+    <h2 class="skills-headline fade-up">技能与工具</h2>
+
+    <div class="skills-grid">
+      <div class="skill-card fade-up">
+        <div class="skill-card-icon">💻</div>
+        <div class="skill-card-title">编程语言</div>
+        <div class="skill-tags">
+          <span class="skill-tag">C</span>
+          <span class="skill-tag">C++</span>
+          <span class="skill-tag">Java</span>
+          <span class="skill-tag">Python</span>
+          <span class="skill-tag">TypeScript</span>
+        </div>
+      </div>
+      <div class="skill-card fade-up">
+        <div class="skill-card-icon">🎨</div>
+        <div class="skill-card-title">前端开发</div>
+        <div class="skill-tags">
+          <span class="skill-tag">微信小程序</span>
+          <span class="skill-tag">React</span>
+          <span class="skill-tag">Next.js</span>
+          <span class="skill-tag">HTML/CSS</span>
+          <span class="skill-tag">Tailwind CSS</span>
+        </div>
+      </div>
+      <div class="skill-card fade-up">
+        <div class="skill-card-icon">📊</div>
+        <div class="skill-card-title">数据分析</div>
+        <div class="skill-tags">
+          <span class="skill-tag">Python 爬虫</span>
+          <span class="skill-tag">数据可视化</span>
+          <span class="skill-tag">市场数据分析</span>
+        </div>
+      </div>
+      <div class="skill-card fade-up">
+        <div class="skill-card-icon">🎬</div>
+        <div class="skill-card-title">多媒体设计</div>
+        <div class="skill-tags">
+          <span class="skill-tag">可画</span>
+          <span class="skill-tag">135编辑器</span>
+          <span class="skill-tag">LumaFusion</span>
+          <span class="skill-tag">剪映</span>
+          <span class="skill-tag">摄影</span>
+        </div>
+      </div>
+      <div class="skill-card fade-up">
+        <div class="skill-card-icon">🔧</div>
+        <div class="skill-card-title">工具 & 平台</div>
+        <div class="skill-tags">
+          <span class="skill-tag">Git</span>
+          <span class="skill-tag">VS Code</span>
+          <span class="skill-tag">Claude Code</span>
+          <span class="skill-tag">微信公众号</span>
+          <span class="skill-tag">小红书运营</span>
+        </div>
+      </div>
+      <div class="skill-card fade-up">
+        <div class="skill-card-icon">📐</div>
+        <div class="skill-card-title">基础学科</div>
+        <div class="skill-tags">
+          <span class="skill-tag">数据结构</span>
+          <span class="skill-tag">算法</span>
+          <span class="skill-tag">操作系统</span>
+          <span class="skill-tag">计算机组成原理</span>
+          <span class="skill-tag">离散数学</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== CONTACT ==================== -->
+<section class="contact" id="contact">
+  <div class="contact-inner">
+    <h2 class="contact-headline fade-up">Get In Touch</h2>
+    <p class="contact-sub fade-up">Always open to new opportunities and collaborations.</p>
+    <div class="contact-links fade-up">
+      <a href="mailto:2838801110@qq.com" class="contact-link">📧 2838801110@qq.com</a>
+      <a href="tel:13609024247" class="contact-link">📱 13609024247</a>
+      <a href="https://github.com/Meteorkid" target="_blank" rel="noopener" class="contact-link">⚡ GitHub</a>
+    </div>
+    <p class="contact-quote fade-up">"在技术与创意的交叉领域，持续探索，不断成长。"</p>
+  </div>
+</section>
+
+<footer class="footer">
+  <p>&copy; 2026 刘鑫宇 · Built with passion & code</p>
+</footer>
+
+<script>
+/* ============ TERMINAL TYPEWRITER ============ */
+(function() {
+  const body = document.getElementById('terminalBody');
+
+  const lines = [
+    { type: 'cmd',    text: '$ whoami' },
+    { type: 'output', html: '<span class="output">刘鑫宇</span>' },
+    { type: 'blank' },
+    { type: 'cmd',    text: '$ cat about.md' },
+    { type: 'output', html: '<span class="output">广东技术师范大学 · 国际教育学院 · 2024级</span>' },
+    { type: 'output', html: '<span class="output">计算机科学与技术 · 全栈开发 & 新媒体创作者</span>' },
+    { type: 'output', html: '<span class="output">科创部负责人 | 3段实习 | 20+ 项获奖</span>' },
+    { type: 'blank' },
+    { type: 'cmd',    text: '$ ls skills/' },
+    { type: 'output', html: '<span class="highlight">Python  小程序  React  Next.js  数据分析  新媒体运营</span>' },
+    { type: 'blank' },
+    { type: 'cmd',    text: '$ echo "代码 × 创意 = 无限可能"' },
+    { type: 'output', html: '<span class="highlight">✨</span>' },
+  ];
+
+  const lineEls = [];
+  lines.forEach(line => {
+    const div = document.createElement('div');
+    div.className = 'terminal-line';
+    if (line.type === 'blank') {
+      div.innerHTML = '&nbsp;';
+    }
+    lineEls.push({ el: div, data: line });
+    body.appendChild(div);
+  });
+
+  const cursorLine = document.createElement('div');
+  cursorLine.className = 'terminal-line visible';
+  cursorLine.innerHTML = '<span class="terminal-cursor"></span>';
+  cursorLine.style.opacity = '0';
+  body.appendChild(cursorLine);
+
+  let lineIdx = 0;
+
+  function typeNextLine() {
+    if (lineIdx >= lineEls.length) {
+      cursorLine.style.opacity = '1';
+      return;
+    }
+
+    const { el, data } = lineEls[lineIdx];
+    el.classList.add('visible');
+    lineIdx++;
+
+    if (data.type === 'blank') {
+      setTimeout(typeNextLine, 150);
+      return;
+    }
+
+    if (data.type === 'cmd') {
+      typeText(el, data.text, 45, () => {
+        setTimeout(typeNextLine, 300);
+      });
+    } else {
+      const prefix = '<span class="cmd">&gt; </span>';
+      el.innerHTML = prefix;
+      setTimeout(() => {
+        el.innerHTML = prefix + data.html;
+        setTimeout(typeNextLine, 200);
+      }, 120);
+    }
+  }
+
+  function typeText(el, text, speed, callback) {
+    const parts = text.match(/^(\$ )(.*)/);
+    if (parts) {
+      el.innerHTML = '<span class="cmd">$ </span>';
+      const restText = parts[2];
+      let charIdx = 0;
+
+      function typeChar() {
+        if (charIdx < restText.length) {
+          el.innerHTML = '<span class="cmd">$ </span><span class="cmd-text">' + restText.substring(0, charIdx + 1) + '</span>';
+          charIdx++;
+          setTimeout(typeChar, speed + Math.random() * 30);
+        } else {
+          if (callback) callback();
+        }
+      }
+      typeChar();
+    }
+  }
+
+  setTimeout(typeNextLine, 600);
+})();
+
+/* ============ INTERSECTION OBSERVER ============ */
+(function() {
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('is-visible');
+      }
+    });
+  }, { threshold: 0.15, rootMargin: '0px 0px -50px 0px' });
+
+  document.querySelectorAll('.fade-up, .tl-item').forEach(el => {
+    observer.observe(el);
+  });
+})();
+
+/* ============ MOUSE FOLLOW CURSOR GLOW ============ */
+(function() {
+  const glow = document.getElementById('cursorGlow');
+  let mx = 0, my = 0, gx = 0, gy = 0;
+
+  document.addEventListener('mousemove', (e) => {
+    mx = e.clientX;
+    my = e.clientY;
+  });
+
+  function animate() {
+    gx += (mx - gx) * 0.08;
+    gy += (my - gy) * 0.08;
+    glow.style.left = gx + 'px';
+    glow.style.top = gy + 'px';
+    requestAnimationFrame(animate);
+  }
+  animate();
+})();
+
+/* ============ NAVBAR SCROLL ============ */
+(function() {
+  const navbar = document.getElementById('navbar');
+  window.addEventListener('scroll', () => {
+    if (window.scrollY > 50) {
+      navbar.classList.add('scrolled');
+    } else {
+      navbar.classList.remove('scrolled');
+    }
+  }, { passive: true });
+})();
+
+/* ============ PARALLAX ON SCROLL ============ */
+(function() {
+  const terminalWin = document.querySelector('.terminal-window');
+  if (!terminalWin) return;
+
+  window.addEventListener('scroll', () => {
+    const st = window.pageYOffset;
+    if (st < window.innerHeight) {
+      const ratio = st / window.innerHeight;
+      terminalWin.style.transform = `translateY(${st * 0.15}px)`;
+      terminalWin.style.opacity = 1 - ratio * 0.6;
+    }
+  }, { passive: true });
+})();
+</script>
+</body>
+</html>
