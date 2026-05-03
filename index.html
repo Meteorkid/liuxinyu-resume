@@ -5,13 +5,17 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>刘鑫宇 — 计算机科学与技术 · 全栈开发 & 新媒体创作者</title>
 <meta name="description" content="刘鑫宇的个人简历网站。广东技术师范大学国际教育学院2024级计算机科学与技术专业学生。">
+<meta property="og:title" content="刘鑫宇 — 计算机科学与技术 · 全栈开发 & 新媒体创作者">
+<meta property="og:description" content="广东技术师范大学国际教育学院2024级计算机科学与技术专业。科创部负责人，3段实习，20+项获奖。">
+<meta property="og:type" content="website">
+<meta property="og:image" content="大头照.jpg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700;900&family=Caveat:wght@400;600&family=Inter:wght@300;400;600;800;900&display=swap" rel="stylesheet">
 <style>
 /* ============ RESET & BASE ============ */
 *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
-html { scroll-behavior: smooth; font-size: 16px; overflow-x: hidden; }
+html { scroll-behavior: smooth; font-size: 16px; overflow-x: hidden; scroll-padding-top: 80px; }
 body {
   font-family: 'Noto Sans SC', 'Inter', sans-serif;
   color: #1a1a1a;
@@ -20,6 +24,16 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 ::selection { background: #F4D758; color: #1a1a1a; }
+
+/* ============ SCROLL PROGRESS BAR ============ */
+.scroll-progress {
+  position: fixed;
+  top: 0; left: 0;
+  width: 0%; height: 3px;
+  background: linear-gradient(90deg, #F4D758, #2B7FD8, #6C5CE7, #F7A946);
+  z-index: 200;
+  transition: width 0.05s linear;
+}
 
 /* ============ CUSTOM CURSOR GLOW ============ */
 .cursor-glow {
@@ -43,7 +57,7 @@ section { position: relative; }
   font-weight: 600;
   letter-spacing: 0.25em;
   text-transform: uppercase;
-  color: #999;
+  color: #777;
   margin-bottom: 2rem;
 }
 
@@ -80,11 +94,66 @@ section { position: relative; }
   font-size: 0.85rem;
   font-weight: 500;
   transition: color 0.2s;
+  position: relative;
 }
 .navbar-links a:hover { color: #2B7FD8; }
+.navbar-links a.active { color: #2B7FD8; }
+.navbar-links a.active::after {
+  content: '';
+  position: absolute;
+  bottom: -4px; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, #F4D758, #2B7FD8);
+  border-radius: 1px;
+}
+
+/* 汉堡菜单按钮 */
+.navbar-toggle {
+  display: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 8px;
+  z-index: 110;
+}
+.navbar-toggle span {
+  display: block;
+  width: 22px; height: 2px;
+  background: #1a1a1a;
+  margin: 5px 0;
+  transition: all 0.3s;
+  border-radius: 1px;
+}
+.navbar-toggle.open span:nth-child(1) { transform: rotate(45deg) translate(5px, 5px); }
+.navbar-toggle.open span:nth-child(2) { opacity: 0; }
+.navbar-toggle.open span:nth-child(3) { transform: rotate(-45deg) translate(5px, -5px); }
+
+/* 移动端遮罩 */
+.nav-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(254,252,246,0.98);
+  backdrop-filter: blur(20px);
+  z-index: 99;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 2rem;
+}
+.nav-overlay.open { display: flex; }
+.nav-overlay a {
+  text-decoration: none;
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #1a1a1a;
+  transition: color 0.2s;
+}
+.nav-overlay a:hover { color: #2B7FD8; }
+
 @media (max-width: 768px) {
-  .navbar-links { gap: 1rem; }
-  .navbar-links a { font-size: 0.75rem; }
+  .navbar-links { display: none; }
+  .navbar-toggle { display: block; }
 }
 
 /* ============ HERO — TERMINAL STYLE ============ */
@@ -95,6 +164,8 @@ section { position: relative; }
   justify-content: center;
   align-items: center;
   background: #0d1117;
+  background-image: radial-gradient(rgba(255,255,255,0.03) 1px, transparent 1px);
+  background-size: 24px 24px;
   position: relative;
   overflow: hidden;
   padding: 2rem;
@@ -166,9 +237,53 @@ section { position: relative; }
   50% { opacity: 0; }
 }
 
+/* 终端 Skip 按钮 */
+.terminal-skip {
+  position: absolute;
+  bottom: 1rem; right: 1rem;
+  background: none;
+  border: 1px solid rgba(255,255,255,0.15);
+  color: rgba(255,255,255,0.4);
+  font-size: 0.7rem;
+  padding: 0.3rem 0.8rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  transition: all 0.3s;
+  z-index: 3;
+}
+.terminal-skip:hover {
+  color: rgba(255,255,255,0.8);
+  border-color: rgba(255,255,255,0.3);
+}
+.terminal-skip.hidden { display: none; }
+
 @keyframes fadeUp {
   from { opacity: 0; transform: translateY(20px); }
   to { opacity: 0.8; transform: translateY(0); }
+}
+
+/* 下载简历按钮 */
+.hero-download {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 2rem;
+  padding: 0.7rem 1.5rem;
+  border-radius: 12px;
+  border: 1px solid rgba(244,215,88,0.3);
+  background: rgba(244,215,88,0.08);
+  color: #F4D758;
+  text-decoration: none;
+  font-size: 0.85rem;
+  font-weight: 500;
+  transition: all 0.3s;
+  z-index: 2;
+}
+.hero-download:hover {
+  background: rgba(244,215,88,0.15);
+  border-color: rgba(244,215,88,0.5);
+  box-shadow: 0 0 20px rgba(244,215,88,0.15);
 }
 
 .hero-scroll {
@@ -502,7 +617,7 @@ section { position: relative; }
 
 /* ============ PROJECTS ============ */
 .projects {
-  padding: 10rem 2rem;
+  padding: 8rem 2rem;
   background: #fefcf6;
 }
 .projects-inner { max-width: 1100px; margin: 0 auto; }
@@ -592,7 +707,7 @@ section { position: relative; }
 
 /* ============ GITHUB PROJECTS ============ */
 .github-section {
-  padding: 6rem 2rem;
+  padding: 8rem 2rem;
   background: #0d1117;
 }
 .github-inner { max-width: 1100px; margin: 0 auto; }
@@ -931,6 +1046,35 @@ section { position: relative; }
   line-height: 1.8;
 }
 
+/* ============ BACK TO TOP ============ */
+.back-to-top {
+  position: fixed;
+  bottom: 2rem; right: 2rem;
+  width: 44px; height: 44px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #F4D758, #2B7FD8);
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  font-size: 1.2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 90;
+  opacity: 0;
+  transform: translateY(20px);
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 4px 16px rgba(43,127,216,0.3);
+}
+.back-to-top.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+.back-to-top:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(43,127,216,0.4);
+}
+
 /* Footer */
 .footer {
   background: #1a2332;
@@ -944,6 +1088,19 @@ section { position: relative; }
   letter-spacing: 0.1em;
 }
 
+/* ============ SECTION WAVES ============ */
+.section-wave {
+  display: block;
+  width: 100%;
+  height: auto;
+  margin-top: -1px;
+  position: relative;
+  z-index: 1;
+}
+.section-wave--flip {
+  transform: scaleY(-1);
+}
+
 /* ============ RESPONSIVE ============ */
 @media (max-width: 768px) {
   .project-grid { grid-template-columns: 1fr; gap: 2rem; }
@@ -951,7 +1108,6 @@ section { position: relative; }
   .timeline { padding-left: 2.5rem; }
   .timeline::before { left: 4px; }
   .tl-item::before { left: -2.5rem; width: 10px; height: 10px; }
-  .work-card { flex: 0 0 280px; }
   .contact-links { gap: 1.5rem; }
   .terminal-window { border-radius: 8px; }
   .terminal-body { padding: 1.2rem 1rem 2rem; font-size: 0.8rem; min-height: 280px; }
@@ -973,6 +1129,9 @@ section { position: relative; }
 </head>
 <body>
 
+<!-- 滚动进度条 -->
+<div class="scroll-progress" id="scrollProgress"></div>
+
 <!-- Cursor glow -->
 <div class="cursor-glow" id="cursorGlow"></div>
 
@@ -983,11 +1142,29 @@ section { position: relative; }
     <li><a href="#about">关于</a></li>
     <li><a href="#experience">经历</a></li>
     <li><a href="#projects">项目</a></li>
+    <li><a href="#github">开源</a></li>
     <li><a href="#awards">获奖</a></li>
     <li><a href="#skills">技能</a></li>
     <li><a href="#contact">联系</a></li>
   </ul>
+  <button class="navbar-toggle" id="navToggle" aria-label="菜单">
+    <span></span><span></span><span></span>
+  </button>
 </nav>
+
+<!-- 移动端导航遮罩 -->
+<div class="nav-overlay" id="navOverlay">
+  <a href="#about">关于</a>
+  <a href="#experience">经历</a>
+  <a href="#projects">项目</a>
+  <a href="#github">开源</a>
+  <a href="#awards">获奖</a>
+  <a href="#skills">技能</a>
+  <a href="#contact">联系</a>
+</div>
+
+<!-- 回到顶部 -->
+<button class="back-to-top" id="backToTop" aria-label="回到顶部">↑</button>
 
 <!-- ==================== HERO — TERMINAL ==================== -->
 <section class="hero">
@@ -1001,7 +1178,21 @@ section { position: relative; }
     <div class="terminal-body" id="terminalBody">
       <!-- Lines injected by JS typewriter -->
     </div>
+    <button class="terminal-skip" id="terminalSkip">Skip →</button>
+    <noscript>
+      <div style="padding:2rem;color:#8b949e;font-family:monospace;font-size:0.9rem;line-height:1.8;">
+        <p style="color:#F4D758;">刘鑫宇</p>
+        <p>广东技术师范大学 · 国际教育学院 · 2024级</p>
+        <p>计算机科学与技术 · 全栈开发 & 新媒体创作者</p>
+        <p>科创部负责人 | 3段实习 | 20+ 项获奖</p>
+      </div>
+    </noscript>
   </div>
+  <a href="#" class="hero-download" id="heroDownload">
+    <span>下载简历 PDF</span>
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 1v10M8 11l-3-3M8 11l3-3M2 14h12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  </a>
+
   <div class="hero-scroll">
     <span>Scroll</span>
     <div class="hero-scroll-line"></div>
@@ -1045,6 +1236,8 @@ section { position: relative; }
     </div>
   </div>
 </section>
+
+<svg class="section-wave" viewBox="0 0 1440 60" preserveAspectRatio="none"><path d="M0,40 C360,80 720,0 1080,40 C1260,60 1380,20 1440,30 L1440,60 L0,60 Z" fill="#fefcf6"/></svg>
 
 <!-- ==================== EXPERIENCE ==================== -->
 <section class="experience" id="experience">
@@ -1180,9 +1373,16 @@ section { position: relative; }
         <div class="github-card-desc">打字练习网站，支持 .txt / .epub 文件导入，像临摹字帖一样边看边打。提供实时 WPM、准确率、错误检测等统计功能。</div>
         <div class="github-card-meta">React 18 · TypeScript · Vite · MIT</div>
       </a>
+      <a href="https://github.com/Meteorkid/CodexBar" target="_blank" class="github-card">
+        <div class="github-card-name"><span>🎚️</span> CodexBar</div>
+        <div class="github-card-desc">macOS 14+ 菜单栏应用，实时显示 Codex、Claude、Cursor、Gemini 等 15+ AI 工具的 Session/Weekly 用量统计和重置时间。Swift 原生开发，无 Dock 图标，极简 UI。</div>
+        <div class="github-card-meta">Swift · macOS · 菜单栏应用</div>
+      </a>
     </div>
   </div>
 </section>
+
+<svg class="section-wave" viewBox="0 0 1440 60" preserveAspectRatio="none"><path d="M0,20 C240,60 480,0 720,30 C960,60 1200,10 1440,40 L1440,60 L0,60 Z" fill="#fefcf6"/></svg>
 
 <!-- ==================== AWARDS ==================== -->
 <section class="awards" id="awards">
@@ -1236,7 +1436,7 @@ section { position: relative; }
           <div class="award-badge">二</div>
           <div class="award-info">
             <div class="award-title">广东省首届"AI科普+"创意与应用大赛 · AI微笑小程序编程赛季</div>
-            <div class="award-detail">《天文地理》二等奖</div>
+            <div class="award-detail">《天文地理》二等奖 · 2025.09</div>
           </div>
         </div>
         <div class="award-item">
@@ -1376,7 +1576,7 @@ section { position: relative; }
           <div class="award-badge">三</div>
           <div class="award-info">
             <div class="award-title">职业规划大赛</div>
-            <div class="award-detail">三等奖</div>
+            <div class="award-detail">三等奖 · 2025</div>
           </div>
         </div>
       </div>
@@ -1455,9 +1655,27 @@ section { position: relative; }
           <span class="skill-tag">离散数学</span>
         </div>
       </div>
+      <div class="skill-card fade-up">
+        <div class="skill-card-icon">📚</div>
+        <div class="skill-card-title">已修课程</div>
+        <div class="skill-tags">
+          <span class="skill-tag">C语言程序设计</span>
+          <span class="skill-tag">数据结构与算法</span>
+          <span class="skill-tag">高等数学</span>
+          <span class="skill-tag">线性代数</span>
+          <span class="skill-tag">离散数学</span>
+          <span class="skill-tag">操作系统</span>
+          <span class="skill-tag">计算机组成原理</span>
+          <span class="skill-tag">C++ Primer Plus</span>
+          <span class="skill-tag">Java</span>
+          <span class="skill-tag">剑桥雅思中级</span>
+        </div>
+      </div>
     </div>
   </div>
 </section>
+
+<svg class="section-wave" viewBox="0 0 1440 80" preserveAspectRatio="none"><path d="M0,50 C360,10 720,70 1080,30 C1260,10 1380,50 1440,40 L1440,80 L0,80 Z" fill="#1a2332"/></svg>
 
 <!-- ==================== CONTACT ==================== -->
 <section class="contact" id="contact">
@@ -1467,6 +1685,7 @@ section { position: relative; }
     <div class="contact-links fade-up">
       <a href="mailto:2838801110@qq.com" class="contact-link">📧 2838801110@qq.com</a>
       <a href="tel:13609024247" class="contact-link">📱 13609024247</a>
+      <span class="contact-link">💬 微信：13609024247</span>
       <a href="https://github.com/Meteorkid" target="_blank" rel="noopener" class="contact-link">⚡ GitHub</a>
     </div>
     <p class="contact-quote fade-up">"在技术与创意的交叉领域，持续探索，不断成长。"</p>
@@ -1567,6 +1786,31 @@ section { position: relative; }
   }
 
   setTimeout(typeNextLine, 600);
+
+  // Skip 按钮
+  const skipBtn = document.getElementById('terminalSkip');
+  if (skipBtn) {
+    skipBtn.addEventListener('click', () => {
+      lineEls.forEach(({ el, data }) => {
+        el.classList.add('visible');
+        if (data.type === 'blank') {
+          el.innerHTML = '&nbsp;';
+        } else if (data.type === 'cmd') {
+          el.innerHTML = '<span class="cmd">$ </span><span class="cmd-text">' + data.text.replace('$ ', '') + '</span>';
+        } else {
+          el.innerHTML = '<span class="cmd">&gt; </span>' + data.html;
+        }
+      });
+      cursorLine.style.opacity = '1';
+      lineIdx = lineEls.length;
+      skipBtn.classList.add('hidden');
+    });
+  }
+
+  // prefers-reduced-motion 自动跳过
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    skipBtn && skipBtn.click();
+  }
 })();
 
 /* ============ INTERSECTION OBSERVER ============ */
@@ -1634,6 +1878,60 @@ section { position: relative; }
       navbar.classList.remove('scrolled');
     }
   }, { passive: true });
+})();
+
+/* ============ HAMBURGER MENU ============ */
+(function() {
+  const toggle = document.getElementById('navToggle');
+  const overlay = document.getElementById('navOverlay');
+  if (!toggle || !overlay) return;
+
+  toggle.addEventListener('click', () => {
+    toggle.classList.toggle('open');
+    overlay.classList.toggle('open');
+    document.body.style.overflow = overlay.classList.contains('open') ? 'hidden' : '';
+  });
+
+  overlay.querySelectorAll('a').forEach(link => {
+    link.addEventListener('click', () => {
+      toggle.classList.remove('open');
+      overlay.classList.remove('open');
+      document.body.style.overflow = '';
+    });
+  });
+})();
+
+/* ============ ACTIVE NAV LINK ============ */
+(function() {
+  const sections = document.querySelectorAll('section[id]');
+  const navLinks = document.querySelectorAll('.navbar-links a');
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const id = entry.target.id;
+        navLinks.forEach(link => {
+          link.classList.toggle('active', link.getAttribute('href') === '#' + id);
+        });
+      }
+    });
+  }, { threshold: 0.3, rootMargin: '-80px 0px -50% 0px' });
+
+  sections.forEach(s => observer.observe(s));
+})();
+
+/* ============ BACK TO TOP ============ */
+(function() {
+  const btn = document.getElementById('backToTop');
+  if (!btn) return;
+
+  window.addEventListener('scroll', () => {
+    btn.classList.toggle('visible', window.scrollY > window.innerHeight);
+  }, { passive: true });
+
+  btn.addEventListener('click', () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
 })();
 
 /* ============ PARALLAX ON SCROLL ============ */
@@ -1733,6 +2031,51 @@ section { position: relative; }
 
     progress.style.height = (ratio * timelineHeight) + 'px';
   }, { passive: true });
+})();
+
+/* ============ SCROLL PROGRESS BAR ============ */
+(function() {
+  const bar = document.getElementById('scrollProgress');
+  if (!bar) return;
+
+  window.addEventListener('scroll', () => {
+    const docH = document.documentElement.scrollHeight - window.innerHeight;
+    const ratio = docH > 0 ? (window.scrollY / docH) * 100 : 0;
+    bar.style.width = ratio + '%';
+  }, { passive: true });
+})();
+
+/* ============ MAGNETIC CARD EFFECT ============ */
+(function() {
+  const cards = document.querySelectorAll('.github-card, .project-card');
+  const strength = 0.15; // 磁吸强度
+
+  cards.forEach(card => {
+    card.addEventListener('mousemove', (e) => {
+      const rect = card.getBoundingClientRect();
+      const cx = rect.left + rect.width / 2;
+      const cy = rect.top + rect.height / 2;
+      const dx = e.clientX - cx;
+      const dy = e.clientY - cy;
+
+      // 只在鼠标靠近边缘时生效
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      const threshold = Math.max(rect.width, rect.height) * 0.6;
+
+      if (dist < threshold) {
+        const factor = 1 - dist / threshold;
+        const moveX = dx * strength * factor;
+        const moveY = dy * strength * factor;
+        card.style.transform = `translate(${moveX}px, ${moveY}px)`;
+      }
+    });
+
+    card.addEventListener('mouseleave', () => {
+      card.style.transition = 'transform 0.5s cubic-bezier(0.16, 1, 0.3, 1)';
+      card.style.transform = 'translate(0, 0)';
+      setTimeout(() => { card.style.transition = ''; }, 500);
+    });
+  });
 })();
 </script>
 </body>
