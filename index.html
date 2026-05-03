@@ -12,6 +12,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700;900&family=Caveat:wght@400;600&family=Inter:wght@300;400;600;800;900&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <style>
 /* ============ RESET & BASE ============ */
 *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
@@ -1125,6 +1126,132 @@ section { position: relative; }
 .fade-up-delay-1 { transition-delay: 0.1s; }
 .fade-up-delay-2 { transition-delay: 0.2s; }
 .fade-up-delay-3 { transition-delay: 0.3s; }
+
+/* ============ PDF DOWNLOAD STYLES ============ */
+.pdf-content {
+  background: #fff;
+  color: #1a1a1a;
+  font-family: 'Noto Sans SC', 'Inter', sans-serif;
+}
+
+.pdf-content .hero {
+  background: #0d1117 !important;
+  min-height: auto !important;
+  padding: 3rem 2rem !important;
+}
+
+.pdf-content .terminal-window {
+  box-shadow: none !important;
+  border: 1px solid rgba(255,255,255,0.1);
+}
+
+.pdf-content .terminal-line {
+  opacity: 1 !important;
+}
+
+.pdf-content .terminal-skip,
+.pdf-content .hero-scroll,
+.pdf-content .hero-download,
+.pdf-content .scroll-progress,
+.pdf-content .cursor-glow,
+.pdf-content .back-to-top,
+.pdf-content .navbar {
+  display: none !important;
+}
+
+.pdf-content section {
+  page-break-inside: avoid;
+}
+
+.pdf-content .project-card {
+  transform: none !important;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.1) !important;
+}
+
+.pdf-content .tl-item {
+  opacity: 1 !important;
+  transform: none !important;
+}
+
+.pdf-content .tl-card {
+  transform: none !important;
+}
+
+.pdf-content .github-card {
+  opacity: 1 !important;
+  transform: none !important;
+}
+
+.pdf-content .award-item {
+  opacity: 1 !important;
+  transform: none !important;
+}
+
+.pdf-content .skill-card {
+  opacity: 1 !important;
+  transform: none !important;
+}
+
+.pdf-content .skill-tag {
+  opacity: 1 !important;
+  transform: none !important;
+}
+
+.pdf-content .fade-up {
+  opacity: 1 !important;
+  transform: none !important;
+}
+
+.pdf-content .award-stat-number {
+  -webkit-text-fill-color: #F4D758 !important;
+}
+
+.pdf-content .section-wave {
+  display: none !important;
+}
+
+/* PDF 生成中的加载提示 */
+.pdf-loading {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(13, 17, 23, 0.9);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s;
+}
+
+.pdf-loading.active {
+  opacity: 1;
+  pointer-events: all;
+}
+
+.pdf-loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid rgba(244, 215, 88, 0.3);
+  border-top-color: #F4D758;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 1rem;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.pdf-loading-text {
+  color: #F4D758;
+  font-size: 0.9rem;
+  font-family: 'SF Mono', 'Fira Code', monospace;
+}
 </style>
 </head>
 <body>
@@ -1165,6 +1292,12 @@ section { position: relative; }
 
 <!-- 回到顶部 -->
 <button class="back-to-top" id="backToTop" aria-label="回到顶部">↑</button>
+
+<!-- PDF 下载加载提示 -->
+<div class="pdf-loading" id="pdfLoading">
+  <div class="pdf-loading-spinner"></div>
+  <div class="pdf-loading-text">正在生成 PDF，请稍候...</div>
+</div>
 
 <!-- ==================== HERO — TERMINAL ==================== -->
 <section class="hero">
@@ -2075,6 +2208,99 @@ section { position: relative; }
       card.style.transform = 'translate(0, 0)';
       setTimeout(() => { card.style.transition = ''; }, 500);
     });
+  });
+})();
+
+/* ============ PDF DOWNLOAD ============ */
+(function() {
+  const downloadBtn = document.getElementById('heroDownload');
+  const loading = document.getElementById('pdfLoading');
+
+  if (!downloadBtn) return;
+
+  downloadBtn.addEventListener('click', async (e) => {
+    e.preventDefault();
+
+    // 显示加载提示
+    loading.classList.add('active');
+
+    // 等待一小段时间让动画完成
+    await new Promise(resolve => setTimeout(resolve, 100));
+
+    // 克隆 body 内容
+    const originalBody = document.body;
+    const clonedBody = originalBody.cloneNode(true);
+
+    // 添加 PDF 样式类
+    clonedBody.classList.add('pdf-content');
+
+    // 移除不需要的元素
+    const removeSelectors = [
+      '.scroll-progress',
+      '.cursor-glow',
+      '.back-to-top',
+      '.pdf-loading',
+      '.terminal-skip',
+      '.hero-scroll',
+      '.hero-download',
+      '.navbar',
+      '.nav-overlay'
+    ];
+
+    removeSelectors.forEach(selector => {
+      const elements = clonedBody.querySelectorAll(selector);
+      elements.forEach(el => el.remove());
+    });
+
+    // 确保所有动画元素可见
+    const animatedElements = clonedBody.querySelectorAll('.fade-up, .tl-item, .github-card, .award-item, .skill-card, .skill-tag');
+    animatedElements.forEach(el => {
+      el.style.opacity = '1';
+      el.style.transform = 'none';
+    });
+
+    // 创建临时容器
+    const tempContainer = document.createElement('div');
+    tempContainer.style.position = 'absolute';
+    tempContainer.style.left = '-9999px';
+    tempContainer.style.top = '0';
+    tempContainer.style.width = '1024px';
+    tempContainer.appendChild(clonedBody);
+    document.body.appendChild(tempContainer);
+
+    // 配置 html2pdf 选项
+    const opt = {
+      margin: [10, 10, 10, 10],
+      filename: '刘鑫宇_全栈开发工程师_简历.pdf',
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: {
+        scale: 2,
+        useCORS: true,
+        letterRendering: true,
+        logging: false
+      },
+      jsPDF: {
+        unit: 'mm',
+        format: 'a4',
+        orientation: 'portrait'
+      },
+      pagebreak: {
+        mode: ['avoid-all', 'css', 'legacy']
+      }
+    };
+
+    try {
+      // 生成 PDF
+      await html2pdf().set(opt).from(tempContainer).save();
+    } catch (error) {
+      console.error('PDF 生成失败:', error);
+      alert('PDF 生成失败，请稍后重试');
+    } finally {
+      // 清理临时容器
+      document.body.removeChild(tempContainer);
+      // 隐藏加载提示
+      loading.classList.remove('active');
+    }
   });
 })();
 </script>
