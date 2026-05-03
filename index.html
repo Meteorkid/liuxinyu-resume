@@ -220,7 +220,7 @@ section { position: relative; }
 
 .about-grid {
   display: grid;
-  grid-template-columns: 280px 1fr;
+  grid-template-columns: 300px 1fr;
   gap: 4rem;
   align-items: start;
 }
@@ -232,34 +232,121 @@ section { position: relative; }
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 1rem;
+  gap: 1.5rem;
 }
-.avatar-circle {
-  width: 200px; height: 200px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #2B7FD8, #6C5CE7);
+.avatar-wrapper {
+  position: relative;
+  width: 260px; height: 260px;
+}
+/* 外层光晕 — Linear 风格紫蓝渐变脉冲 */
+.avatar-glow {
+  position: absolute;
+  inset: -20px;
+  border-radius: 48px;
+  background: linear-gradient(135deg, rgba(108,92,231,0.35), rgba(43,127,216,0.25), rgba(162,155,254,0.3));
+  filter: blur(40px);
+  animation: glowPulse 4s ease-in-out infinite;
+  z-index: 0;
+}
+@keyframes glowPulse {
+  0%, 100% { opacity: 0.5; transform: scale(1); }
+  50% { opacity: 0.8; transform: scale(1.06); }
+}
+/* 渐变边框层 */
+.avatar-border {
+  position: absolute;
+  inset: 0;
+  border-radius: 44px;
+  padding: 2px;
+  background: linear-gradient(135deg, rgba(108,92,231,0.6), rgba(43,127,216,0.4), rgba(162,155,254,0.5), rgba(43,127,216,0.3));
+  z-index: 1;
+  transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.avatar-wrapper:hover .avatar-border {
+  background: linear-gradient(135deg, rgba(108,92,231,0.9), rgba(43,127,216,0.7), rgba(162,155,254,0.8), rgba(43,127,216,0.6));
+}
+.avatar-border-inner {
+  width: 100%; height: 100%;
+  border-radius: 42px;
+  background: #fefcf6;
+}
+/* 头像本体 */
+.avatar-frame {
+  position: relative;
+  width: 256px; height: 256px;
+  border-radius: 44px;
+  overflow: hidden;
+  z-index: 2;
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,0.08),
+    0 20px 60px rgba(108,92,231,0.2),
+    0 8px 24px rgba(0,0,0,0.08);
+  transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.avatar-wrapper:hover .avatar-frame {
+  transform: translateY(-8px);
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,0.12),
+    0 30px 80px rgba(108,92,231,0.3),
+    0 16px 40px rgba(0,0,0,0.12);
+}
+.avatar-frame img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  display: block;
+}
+/* 状态指示器 — Linear 风格 */
+.avatar-status {
+  position: absolute;
+  bottom: 12px; right: 12px;
+  z-index: 3;
   display: flex;
   align-items: center;
-  justify-content: center;
-  font-size: 64px;
-  color: #fff;
-  font-weight: 900;
-  box-shadow: 0 8px 40px rgba(43,127,216,0.25);
-  overflow: hidden;
+  gap: 6px;
+  padding: 4px 10px 4px 8px;
+  background: rgba(254,252,246,0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-radius: 100px;
+  border: 1px solid rgba(0,0,0,0.06);
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: #555;
+  letter-spacing: 0.02em;
 }
-.avatar-circle img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+.avatar-status-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: #28c840;
+  box-shadow: 0 0 6px rgba(40,200,64,0.5);
+  animation: statusBlink 2s ease-in-out infinite;
 }
+@keyframes statusBlink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+/* 名字排版 — Apple 风格 */
 .avatar-name {
-  font-weight: 700;
-  font-size: 1.2rem;
+  font-weight: 800;
+  font-size: 1.5rem;
+  letter-spacing: -0.02em;
+  color: #1a1a1a;
 }
 .avatar-school {
   font-size: 0.85rem;
-  color: #888;
+  color: #999;
   text-align: center;
+  line-height: 1.7;
+  font-weight: 400;
+}
+@media (max-width: 768px) {
+  .avatar-wrapper { width: 200px; height: 200px; }
+  .avatar-frame { width: 196px; height: 196px; border-radius: 36px; }
+  .avatar-border { border-radius: 36px; }
+  .avatar-border-inner { border-radius: 34px; }
+  .avatar-glow { border-radius: 36px; inset: -16px; }
+  .avatar-status { bottom: 8px; right: 8px; padding: 3px 8px 3px 6px; font-size: 0.6rem; }
+  .avatar-status-dot { width: 6px; height: 6px; }
 }
 
 .about-info { display: flex; flex-direction: column; gap: 1.5rem; }
@@ -372,6 +459,47 @@ section { position: relative; }
   line-height: 1.6;
 }
 
+/* 时间线卡片 — 3D 滑入 */
+.tl-card {
+  padding: 1.5rem 1.8rem;
+  background: #fff;
+  border-radius: 16px;
+  border: 1px solid #e8e4dc;
+  position: relative;
+  overflow: hidden;
+  transform: perspective(800px) rotateY(3deg) translateX(-20px);
+  transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.tl-item.is-visible .tl-card {
+  transform: perspective(800px) rotateY(0deg) translateX(0);
+}
+/* 悬停渐变高亮条 */
+.tl-card::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 3px;
+  background: linear-gradient(to bottom, #F4D758, #2B7FD8);
+  opacity: 0;
+  transition: opacity 0.4s;
+}
+.tl-card:hover::before { opacity: 1; }
+.tl-card:hover {
+  box-shadow: 0 8px 32px rgba(0,0,0,0.08);
+  border-color: transparent;
+}
+
+/* 时间线竖线滚动点亮 */
+.timeline-line-progress {
+  position: absolute;
+  left: 6px; top: 0;
+  width: 2px; height: 0;
+  background: linear-gradient(to bottom, #F4D758, #2B7FD8, #F7A946, #6C5CE7);
+  z-index: 1;
+  transition: height 0.05s linear;
+  box-shadow: 0 0 8px rgba(43,127,216,0.3);
+}
+
 /* ============ PROJECTS ============ */
 .projects {
   padding: 10rem 2rem;
@@ -406,11 +534,16 @@ section { position: relative; }
   position: relative;
   overflow: hidden;
   cursor: default;
-  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.4s;
+  transform-style: preserve-3d;
+  transition: transform 0.15s ease-out, box-shadow 0.4s;
+  will-change: transform;
 }
 .project-card:hover {
-  transform: translateY(-6px);
-  box-shadow: 0 30px 80px rgba(0,0,0,0.12);
+  box-shadow: 0 30px 80px rgba(0,0,0,0.18);
+}
+/* 背景大字视差浮动 */
+.project-card-bg-text {
+  transition: transform 0.3s ease-out;
 }
 
 .project-card--1 { background: linear-gradient(135deg, #F4D758 0%, #F7A946 100%); }
@@ -460,7 +593,7 @@ section { position: relative; }
 /* ============ GITHUB PROJECTS ============ */
 .github-section {
   padding: 6rem 2rem;
-  background: #f5f2ea;
+  background: #0d1117;
 }
 .github-inner { max-width: 1100px; margin: 0 auto; }
 .github-section .section-label { text-align: center; }
@@ -469,44 +602,76 @@ section { position: relative; }
   font-size: clamp(1.8rem, 4vw, 2.5rem);
   text-align: center;
   margin-bottom: 3rem;
+  color: #fff;
 }
+.github-section .section-label { color: rgba(255,255,255,0.4); }
 .github-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: 1.5rem;
 }
 .github-card {
-  background: #fff;
+  background: #161b22;
   border-radius: 16px;
   padding: 1.8rem;
-  border: 1px solid #e8e4dc;
-  transition: transform 0.3s, box-shadow 0.3s;
+  border: 1px solid rgba(255,255,255,0.06);
   text-decoration: none;
   color: inherit;
   display: block;
+  position: relative;
+  overflow: hidden;
+  opacity: 0;
+  transform: translateY(30px);
+  transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
 }
+.github-card.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+/* 顶部渐变发光边线 — Linear 风格 */
+.github-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, #F4D758, #2B7FD8, #6C5CE7, #F7A946);
+  opacity: 0;
+  transition: opacity 0.4s;
+}
+.github-card:hover::before { opacity: 1; }
 .github-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 12px 40px rgba(0,0,0,0.08);
+  transform: translateY(-6px);
+  box-shadow: 0 16px 48px rgba(0,0,0,0.3), 0 0 30px rgba(43,127,216,0.1);
+  border-color: rgba(255,255,255,0.1);
 }
 .github-card-name {
   font-weight: 700;
   font-size: 1rem;
-  color: #2B7FD8;
-  margin-bottom: 0.4rem;
+  color: #58a6ff;
+  margin-bottom: 0.5rem;
   display: flex;
   align-items: center;
   gap: 0.5rem;
 }
+/* emoji 悬停微弹 */
+.github-card-name span {
+  display: inline-block;
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.github-card:hover .github-card-name span {
+  transform: scale(1.2);
+}
 .github-card-desc {
   font-size: 0.85rem;
-  color: #888;
-  line-height: 1.5;
+  color: #8b949e;
+  line-height: 1.6;
 }
 .github-card-meta {
-  margin-top: 0.8rem;
+  margin-top: 1rem;
   font-size: 0.75rem;
-  color: #aaa;
+  color: #484f58;
+  padding-top: 0.8rem;
+  border-top: 1px solid rgba(255,255,255,0.04);
 }
 
 /* ============ AWARDS ============ */
@@ -520,8 +685,44 @@ section { position: relative; }
   font-weight: 800;
   font-size: clamp(2rem, 5vw, 3rem);
   text-align: center;
-  margin-bottom: 4rem;
+  margin-bottom: 3rem;
   letter-spacing: -0.02em;
+}
+
+/* Codex 风格统计数字条 */
+.awards-stats {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 1.5rem;
+  margin-bottom: 4rem;
+  padding: 2.5rem 2rem;
+  background: #0d1117;
+  border-radius: 20px;
+  border: 1px solid rgba(255,255,255,0.06);
+}
+.award-stat {
+  text-align: center;
+}
+.award-stat-number {
+  font-family: 'Inter', sans-serif;
+  font-weight: 900;
+  font-size: clamp(2.5rem, 5vw, 3.5rem);
+  line-height: 1;
+  background: linear-gradient(135deg, #F4D758, #2B7FD8);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.award-stat-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.4);
+  margin-top: 0.4rem;
+}
+@media (max-width: 600px) {
+  .awards-stats { grid-template-columns: repeat(2, 1fr); gap: 1rem; padding: 1.5rem 1rem; }
 }
 
 .award-group {
@@ -537,6 +738,7 @@ section { position: relative; }
 }
 .award-group--province .award-group-title { color: #2B7FD8; border-color: #2B7FD8; }
 .award-group--city .award-group-title { color: #F7A946; border-color: #F7A946; }
+.award-group--district .award-group-title { color: #e17055; border-color: #e17055; }
 .award-group--school .award-group-title { color: #6C5CE7; border-color: #6C5CE7; }
 .award-group--college .award-group-title { color: #28c840; border-color: #28c840; }
 
@@ -553,9 +755,15 @@ section { position: relative; }
   background: #fff;
   border-radius: 12px;
   border: 1px solid #e8e4dc;
-  transition: transform 0.2s;
+  opacity: 0;
+  transform: translateX(-30px);
+  transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
 }
-.award-item:hover { transform: translateX(4px); }
+.award-item.is-visible {
+  opacity: 1;
+  transform: translateX(0);
+}
+.award-item:hover { transform: translateX(6px); box-shadow: 0 4px 16px rgba(0,0,0,0.06); }
 .award-badge {
   flex-shrink: 0;
   width: 36px; height: 36px;
@@ -566,9 +774,12 @@ section { position: relative; }
   font-size: 1rem;
   font-weight: 900;
   color: #fff;
+  transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
+.award-item:hover .award-badge { transform: rotate(360deg); }
 .award-group--province .award-badge { background: #2B7FD8; }
 .award-group--city .award-badge { background: #F7A946; }
+.award-group--district .award-badge { background: #e17055; }
 .award-group--school .award-badge { background: #6C5CE7; }
 .award-group--college .award-badge { background: #28c840; }
 .award-info { flex: 1; }
@@ -606,13 +817,34 @@ section { position: relative; }
   border-radius: 16px;
   padding: 2rem;
   border: 1px solid #e8e4dc;
-  transition: transform 0.3s, box-shadow 0.3s;
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.4s;
+}
+/* 底部光晕 */
+.skill-card::after {
+  content: '';
+  position: absolute;
+  bottom: -20px; left: 50%;
+  transform: translateX(-50%);
+  width: 80%; height: 40px;
+  background: radial-gradient(ellipse, rgba(43,127,216,0.15) 0%, transparent 70%);
+  opacity: 0;
+  transition: opacity 0.4s;
+  pointer-events: none;
 }
 .skill-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 12px 40px rgba(0,0,0,0.06);
+  transform: translateY(-8px);
+  box-shadow: 0 16px 48px rgba(0,0,0,0.08);
 }
-.skill-card-icon { font-size: 2rem; margin-bottom: 0.8rem; }
+.skill-card:hover::after { opacity: 1; }
+.skill-card-icon {
+  font-size: 2rem;
+  margin-bottom: 0.8rem;
+  display: inline-block;
+  transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.skill-card:hover .skill-card-icon { transform: scale(1.15) rotate(-5deg); }
 .skill-card-title { font-weight: 700; font-size: 1rem; margin-bottom: 0.8rem; }
 .skill-tags { display: flex; flex-wrap: wrap; gap: 0.5rem; }
 .skill-tag {
@@ -622,6 +854,13 @@ section { position: relative; }
   background: #f0ebe3;
   color: #666;
   font-weight: 500;
+  opacity: 0;
+  transform: scale(0.6);
+  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.skill-card.is-visible .skill-tag {
+  opacity: 1;
+  transform: scale(1);
 }
 
 /* ============ CONTACT ============ */
@@ -637,6 +876,17 @@ section { position: relative; }
   font-size: clamp(2rem, 5vw, 3rem);
   margin-bottom: 1rem;
   letter-spacing: -0.02em;
+  background: linear-gradient(135deg, #F4D758, #2B7FD8, #6C5CE7, #F7A946, #F4D758);
+  background-size: 300% 300%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: gradientShift 6s ease-in-out infinite;
+}
+@keyframes gradientShift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
 }
 .contact-sub {
   font-family: 'Caveat', cursive;
@@ -669,7 +919,10 @@ section { position: relative; }
   background: #F4D758;
   transition: width 0.3s;
 }
-.contact-link:hover { opacity: 1; }
+.contact-link:hover {
+  opacity: 1;
+  text-shadow: 0 0 20px rgba(244,215,88,0.3);
+}
 .contact-link:hover::after { width: 100%; }
 .contact-quote {
   font-weight: 300;
@@ -763,9 +1016,17 @@ section { position: relative; }
 
     <div class="about-grid fade-up">
       <div class="about-avatar">
-        <div class="avatar-circle"><img src="大头照.jpg" alt="刘鑫宇"></div>
+        <div class="avatar-wrapper">
+          <div class="avatar-glow"></div>
+          <div class="avatar-border"><div class="avatar-border-inner"></div></div>
+          <div class="avatar-frame"><img src="大头照.jpg" alt="刘鑫宇"></div>
+          <div class="avatar-status">
+            <span class="avatar-status-dot"></span>
+            2024级在读
+          </div>
+        </div>
         <div class="avatar-name">刘鑫宇</div>
-        <div class="avatar-school">广东技术师范大学<br>国际教育学院 · 2024级<br>计算机科学与技术</div>
+        <div class="avatar-school">广东技术师范大学 · 国际教育学院<br>计算机科学与技术</div>
       </div>
 
       <div class="about-info">
@@ -792,30 +1053,41 @@ section { position: relative; }
     <h2 class="experience-headline fade-up">实习与<em>成长轨迹</em></h2>
 
     <div class="timeline">
+      <div class="timeline-line-progress" id="timelineProgress"></div>
       <div class="tl-item">
-        <div class="tl-year">2025.08 — 2025.09</div>
-        <div class="tl-title">佛山红云科技有限公司</div>
-        <div class="tl-desc">线下技术实习，参与实际项目开发，积累企业级开发经验</div>
+        <div class="tl-card">
+          <div class="tl-year">2025.08 — 2025.09</div>
+          <div class="tl-title">佛山红云科技有限公司</div>
+          <div class="tl-desc">线下技术实习，参与实际项目开发，积累企业级开发经验</div>
+        </div>
       </div>
       <div class="tl-item">
-        <div class="tl-year">2025.07 — 2025.08</div>
-        <div class="tl-title">玉汝于成（广州）跨境电商有限公司</div>
-        <div class="tl-desc">线上实习，负责 Python 市场数据爬取与分析（10,000+ 条），开发数据可视化模块，参与前端原型设计</div>
+        <div class="tl-card">
+          <div class="tl-year">2025.07 — 2025.08</div>
+          <div class="tl-title">玉汝于成（广州）跨境电商有限公司</div>
+          <div class="tl-desc">线上实习，负责 Python 市场数据爬取与分析（10,000+ 条），开发数据可视化模块，参与前端原型设计</div>
+        </div>
       </div>
       <div class="tl-item">
-        <div class="tl-year">2025.04 — 2025.06</div>
-        <div class="tl-title">《韶域文化环》小程序开发</div>
-        <div class="tl-desc">核心开发成员，负责前端界面与多设备适配。项目获省赛铜奖、校赛一等奖、挑战杯银奖</div>
+        <div class="tl-card">
+          <div class="tl-year">2025.04 — 2025.06</div>
+          <div class="tl-title">《韶域文化环》小程序开发</div>
+          <div class="tl-desc">核心开发成员，负责前端界面与多设备适配。项目获省赛铜奖、校赛一等奖、挑战杯银奖</div>
+        </div>
       </div>
       <div class="tl-item">
-        <div class="tl-year">2024.12 — 2025.02</div>
-        <div class="tl-title">新西兰携舟科技有限公司</div>
-        <div class="tl-desc">线上实习，开启第一段技术工作经历，锻炼跨文化远程协作能力</div>
+        <div class="tl-card">
+          <div class="tl-year">2024.12 — 2025.02</div>
+          <div class="tl-title">新西兰携舟科技有限公司</div>
+          <div class="tl-desc">线上实习，开启第一段技术工作经历，锻炼跨文化远程协作能力</div>
+        </div>
       </div>
       <div class="tl-item">
-        <div class="tl-year">2024.09 — 至今</div>
-        <div class="tl-title">入学广东技术师范大学</div>
-        <div class="tl-desc">进入国际教育学院计算机科学与技术专业，先后加入新媒体信息部、科创部，现任科创部负责人</div>
+        <div class="tl-card">
+          <div class="tl-year">2024.09 — 至今</div>
+          <div class="tl-title">入学广东技术师范大学</div>
+          <div class="tl-desc">进入国际教育学院计算机科学与技术专业，先后加入新媒体信息部、科创部，现任科创部负责人</div>
+        </div>
       </div>
     </div>
   </div>
@@ -878,33 +1150,33 @@ section { position: relative; }
     <h2 class="github-headline fade-up">GitHub 开源项目</h2>
 
     <div class="github-grid">
-      <a href="https://github.com/Meteorkid/Imagent-X-manus" target="_blank" class="github-card fade-up">
-        <div class="github-card-name">⚡ Imagent-X-manus</div>
+      <a href="https://github.com/Meteorkid/Imagent-X-manus" target="_blank" class="github-card">
+        <div class="github-card-name"><span>⚡</span> Imagent-X-manus</div>
         <div class="github-card-desc">完整的 AI 智能体平台，集成 OpenManus 技术。前端 Next.js 14 + 后端 Spring Boot 3 + PostgreSQL 15，支持 RAG 知识库、多模态 AI、智能体工作流编排、Docker 容器化部署。</div>
         <div class="github-card-meta">Java · Next.js · Docker · MIT · v1.0.3</div>
       </a>
-      <a href="https://github.com/Meteorkid/statux" target="_blank" class="github-card fade-up">
-        <div class="github-card-name">📊 statux</div>
+      <a href="https://github.com/Meteorkid/statux" target="_blank" class="github-card">
+        <div class="github-card-name"><span>📊</span> statux</div>
         <div class="github-card-desc">Claude Code 和 iTerm2 的 AI Agent 状态显示工具。在终端中展示模型信息、上下文用量、Git 分支、Token 计数、费用和速率限制，支持 iTerm2 状态栏插件。</div>
         <div class="github-card-meta">TypeScript · Bun · iTerm2 · MIT</div>
       </a>
-      <a href="https://github.com/Meteorkid/cursor-source-analyzer" target="_blank" class="github-card fade-up">
-        <div class="github-card-name">🔍 cursor-source-analyzer</div>
+      <a href="https://github.com/Meteorkid/cursor-source-analyzer" target="_blank" class="github-card">
+        <div class="github-card-name"><span>🔍</span> cursor-source-analyzer</div>
         <div class="github-card-desc">交互式可视化分析 Cursor AI 代码编辑器的内部架构、AI 集成机制、代码库索引系统和上下文管理。</div>
         <div class="github-card-meta">分析工具 · 2026-05</div>
       </a>
-      <a href="https://github.com/Meteorkid/nanyu-consumer-site" target="_blank" class="github-card fade-up">
-        <div class="github-card-name">🛍️ nanyu-consumer-site</div>
+      <a href="https://github.com/Meteorkid/nanyu-consumer-site" target="_blank" class="github-card">
+        <div class="github-card-name"><span>🛍️</span> nanyu-consumer-site</div>
         <div class="github-card-desc">面向东南亚市场的玉石品牌电商平台。Next.js 16 + TypeScript + Tailwind CSS v4，支持商品展示、内容种草、3D 展示、售后保障与 GA4 埋点。</div>
         <div class="github-card-meta">Next.js 16 · TypeScript · Tailwind v4</div>
       </a>
-      <a href="https://github.com/Meteorkid/yuan-website" target="_blank" class="github-card fade-up">
-        <div class="github-card-name">🌐 yuan-website</div>
+      <a href="https://github.com/Meteorkid/yuan-website" target="_blank" class="github-card">
+        <div class="github-card-name"><span>🌐</span> yuan-website</div>
         <div class="github-card-desc">个人作品集网站，采用 Aceternity UI 组件库，包含 Hero 动效、Bento Grid 技术栈展示、无限滚动获奖卡片、项目筛选等交互效果。</div>
         <div class="github-card-meta">Next.js · Tailwind CSS · Framer Motion</div>
       </a>
-      <a href="https://github.com/Meteorkid/Tollow" target="_blank" class="github-card fade-up">
-        <div class="github-card-name">⌨️ Tollow</div>
+      <a href="https://github.com/Meteorkid/Tollow" target="_blank" class="github-card">
+        <div class="github-card-name"><span>⌨️</span> Tollow</div>
         <div class="github-card-desc">打字练习网站，支持 .txt / .epub 文件导入，像临摹字帖一样边看边打。提供实时 WPM、准确率、错误检测等统计功能。</div>
         <div class="github-card-meta">React 18 · TypeScript · Vite · MIT</div>
       </a>
@@ -917,6 +1189,30 @@ section { position: relative; }
   <div class="awards-inner">
     <p class="section-label fade-up">Awards & Honors</p>
     <h2 class="awards-headline fade-up">获奖荣誉</h2>
+
+    <!-- Codex 风格统计数字条 -->
+    <div class="awards-stats fade-up">
+      <div class="award-stat">
+        <div class="award-stat-number" data-target="5">0</div>
+        <div class="award-stat-label">省级</div>
+      </div>
+      <div class="award-stat">
+        <div class="award-stat-number" data-target="1">0</div>
+        <div class="award-stat-label">市级</div>
+      </div>
+      <div class="award-stat">
+        <div class="award-stat-number" data-target="2">0</div>
+        <div class="award-stat-label">区级</div>
+      </div>
+      <div class="award-stat">
+        <div class="award-stat-number" data-target="6">0</div>
+        <div class="award-stat-label">校级</div>
+      </div>
+      <div class="award-stat">
+        <div class="award-stat-number" data-target="5">0</div>
+        <div class="award-stat-label">院级</div>
+      </div>
+    </div>
 
     <!-- 省级 -->
     <div class="award-group award-group--province fade-up">
@@ -969,6 +1265,27 @@ section { position: relative; }
           <div class="award-info">
             <div class="award-title">南雄市"青聚百千万·双百共振兴"</div>
             <div class="award-detail">三等奖 · 2025</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 区级 -->
+    <div class="award-group award-group--district fade-up">
+      <div class="award-group-title">区级奖项</div>
+      <div class="award-list">
+        <div class="award-item">
+          <div class="award-badge">胜</div>
+          <div class="award-info">
+            <div class="award-title">"天河筑梦 创享未来"2025天河区第七届大学生创业大赛</div>
+            <div class="award-detail">《玉汝于成》优胜奖 · 2025.11</div>
+          </div>
+        </div>
+        <div class="award-item">
+          <div class="award-badge">人</div>
+          <div class="award-info">
+            <div class="award-title">"天河筑梦 创享未来"2025天河区第七届大学生创业大赛</div>
+            <div class="award-detail">《玉汝于成》最佳人气奖 · 2025.11</div>
           </div>
         </div>
       </div>
@@ -1258,11 +1575,31 @@ section { position: relative; }
     entries.forEach(entry => {
       if (entry.isIntersecting) {
         entry.target.classList.add('is-visible');
+        // GitHub 卡片交错延迟
+        if (entry.target.classList.contains('github-card')) {
+          const cards = [...document.querySelectorAll('.github-card')];
+          const idx = cards.indexOf(entry.target);
+          entry.target.style.transitionDelay = (idx * 0.1) + 's';
+        }
+        // Skills tag 交错延迟
+        if (entry.target.classList.contains('skill-card')) {
+          const tags = entry.target.querySelectorAll('.skill-tag');
+          tags.forEach((tag, i) => {
+            tag.style.transitionDelay = (i * 0.08) + 's';
+          });
+        }
+        // Awards item 交错延迟
+        if (entry.target.classList.contains('award-item')) {
+          const list = entry.target.closest('.award-list');
+          const items = [...list.querySelectorAll('.award-item')];
+          const idx = items.indexOf(entry.target);
+          entry.target.style.transitionDelay = (idx * 0.06) + 's';
+        }
       }
     });
   }, { threshold: 0.15, rootMargin: '0px 0px -50px 0px' });
 
-  document.querySelectorAll('.fade-up, .tl-item').forEach(el => {
+  document.querySelectorAll('.fade-up, .tl-item, .github-card, .skill-card, .award-item').forEach(el => {
     observer.observe(el);
   });
 })();
@@ -1311,6 +1648,90 @@ section { position: relative; }
       terminalWin.style.transform = `translateY(${st * 0.15}px)`;
       terminalWin.style.opacity = 1 - ratio * 0.6;
     }
+  }, { passive: true });
+})();
+
+/* ============ PROJECT CARD 3D TILT ============ */
+(function() {
+  const cards = document.querySelectorAll('.project-card');
+  cards.forEach(card => {
+    card.addEventListener('mousemove', (e) => {
+      const rect = card.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      const centerX = rect.width / 2;
+      const centerY = rect.height / 2;
+      const rotateX = ((y - centerY) / centerY) * -8;
+      const rotateY = ((x - centerX) / centerX) * 8;
+
+      card.style.transform = `perspective(800px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(1.02)`;
+
+      // 背景大字视差
+      const bgText = card.querySelector('.project-card-bg-text');
+      if (bgText) {
+        const moveX = ((x - centerX) / centerX) * 15;
+        const moveY = ((y - centerY) / centerY) * 10;
+        bgText.style.transform = `translate(${moveX}px, ${moveY}px)`;
+      }
+    });
+
+    card.addEventListener('mouseleave', () => {
+      card.style.transform = 'perspective(800px) rotateX(0deg) rotateY(0deg) scale(1)';
+      const bgText = card.querySelector('.project-card-bg-text');
+      if (bgText) bgText.style.transform = 'translate(0, 0)';
+    });
+  });
+})();
+
+/* ============ AWARDS NUMBER COUNTER ============ */
+(function() {
+  const counters = document.querySelectorAll('.award-stat-number');
+  let animated = false;
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting && !animated) {
+        animated = true;
+        counters.forEach(counter => {
+          const target = parseInt(counter.dataset.target);
+          const duration = 1200;
+          const start = performance.now();
+
+          function update(now) {
+            const elapsed = now - start;
+            const progress = Math.min(elapsed / duration, 1);
+            // easeOutCubic
+            const eased = 1 - Math.pow(1 - progress, 3);
+            counter.textContent = Math.round(target * eased);
+            if (progress < 1) requestAnimationFrame(update);
+          }
+          requestAnimationFrame(update);
+        });
+      }
+    });
+  }, { threshold: 0.3 });
+
+  counters.forEach(c => observer.observe(c));
+})();
+
+/* ============ TIMELINE PROGRESS LINE ============ */
+(function() {
+  const timeline = document.querySelector('.timeline');
+  const progress = document.getElementById('timelineProgress');
+  if (!timeline || !progress) return;
+
+  window.addEventListener('scroll', () => {
+    const rect = timeline.getBoundingClientRect();
+    const timelineTop = rect.top;
+    const timelineHeight = rect.height;
+    const windowHeight = window.innerHeight;
+
+    // 计算滚动进度：当 timeline 顶部进入视口底部时开始，底部离开视口顶部时结束
+    const scrolled = windowHeight - timelineTop;
+    const total = windowHeight + timelineHeight;
+    const ratio = Math.max(0, Math.min(1, scrolled / total));
+
+    progress.style.height = (ratio * timelineHeight) + 'px';
   }, { passive: true });
 })();
 </script>
