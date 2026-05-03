@@ -1126,164 +1126,6 @@ section { position: relative; }
 .fade-up-delay-2 { transition-delay: 0.2s; }
 .fade-up-delay-3 { transition-delay: 0.3s; }
 
-/* ============ PDF DOWNLOAD STYLES ============ */
-body.pdf-mode {
-  overflow: visible !important;
-}
-
-body.pdf-mode .hero {
-  min-height: auto !important;
-  padding: 2rem !important;
-}
-
-body.pdf-mode .terminal-window {
-  box-shadow: none !important;
-}
-
-body.pdf-mode .terminal-line {
-  opacity: 1 !important;
-}
-
-body.pdf-mode section {
-  page-break-inside: avoid;
-  break-inside: avoid;
-}
-
-body.pdf-mode .project-card {
-  transform: none !important;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.1) !important;
-}
-
-body.pdf-mode .tl-item,
-body.pdf-mode .tl-card {
-  transform: none !important;
-}
-
-body.pdf-mode .fade-up,
-body.pdf-mode .tl-item,
-body.pdf-mode .github-card,
-body.pdf-mode .award-item,
-body.pdf-mode .skill-card,
-body.pdf-mode .skill-tag {
-  opacity: 1 !important;
-  transform: none !important;
-  transition: none !important;
-}
-
-body.pdf-mode .award-stat-number {
-  -webkit-text-fill-color: #F4D758 !important;
-}
-
-/* 打印专用样式 */
-@media print {
-  * {
-    -webkit-print-color-adjust: exact !important;
-    print-color-adjust: exact !important;
-  }
-
-  body {
-    overflow: visible !important;
-  }
-
-  .scroll-progress,
-  .cursor-glow,
-  .back-to-top,
-  .pdf-loading,
-  .terminal-skip,
-  .hero-scroll,
-  .hero-download,
-  .navbar,
-  .nav-overlay,
-  .section-wave {
-    display: none !important;
-  }
-
-  .hero {
-    min-height: auto !important;
-    padding: 2rem !important;
-  }
-
-  .terminal-window {
-    box-shadow: none !important;
-  }
-
-  .terminal-line {
-    opacity: 1 !important;
-  }
-
-  section {
-    page-break-inside: avoid;
-    break-inside: avoid;
-  }
-
-  .project-card {
-    transform: none !important;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.1) !important;
-  }
-
-  .tl-item,
-  .tl-card {
-    transform: none !important;
-  }
-
-  .fade-up,
-  .tl-item,
-  .github-card,
-  .award-item,
-  .skill-card,
-  .skill-tag {
-    opacity: 1 !important;
-    transform: none !important;
-    transition: none !important;
-  }
-
-  .award-stat-number {
-    -webkit-text-fill-color: #F4D758 !important;
-  }
-}
-
-/* PDF 生成中的加载提示 */
-.pdf-loading {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(13, 17, 23, 0.9);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  z-index: 10000;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.3s;
-}
-
-.pdf-loading.active {
-  opacity: 1;
-  pointer-events: all;
-}
-
-.pdf-loading-spinner {
-  width: 40px;
-  height: 40px;
-  border: 3px solid rgba(244, 215, 88, 0.3);
-  border-top-color: #F4D758;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-  margin-bottom: 1rem;
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
-.pdf-loading-text {
-  color: #F4D758;
-  font-size: 0.9rem;
-  font-family: 'SF Mono', 'Fira Code', monospace;
-}
 </style>
 </head>
 <body>
@@ -1325,11 +1167,6 @@ body.pdf-mode .award-stat-number {
 <!-- 回到顶部 -->
 <button class="back-to-top" id="backToTop" aria-label="回到顶部">↑</button>
 
-<!-- PDF 下载加载提示 -->
-<div class="pdf-loading" id="pdfLoading">
-  <div class="pdf-loading-spinner"></div>
-  <div class="pdf-loading-text">正在生成 PDF，请稍候...</div>
-</div>
 
 <!-- ==================== HERO — TERMINAL ==================== -->
 <section class="hero">
@@ -2248,37 +2085,22 @@ body.pdf-mode .award-stat-number {
   const downloadBtn = document.getElementById('heroDownload');
   if (!downloadBtn) return;
 
-  downloadBtn.addEventListener('click', (e) => {
-    e.preventDefault();
+  // 设置下载链接
+  downloadBtn.href = '刘鑫宇_全栈开发工程师_简历.pdf';
+  downloadBtn.download = '刘鑫宇_全栈开发工程师_简历.pdf';
 
-    // 强制显示所有动画元素
-    document.querySelectorAll('.fade-up, .tl-item, .github-card, .award-item, .skill-card, .skill-tag').forEach(el => {
-      el.classList.add('is-visible');
-      el.style.opacity = '1';
-      el.style.transform = 'none';
-    });
-
-    // 隐藏不需要的元素
-    document.querySelectorAll('.scroll-progress, .cursor-glow, .back-to-top, .pdf-loading, .terminal-skip, .hero-scroll, .hero-download, .navbar, .nav-overlay, .section-wave').forEach(el => {
-      el.style.display = 'none';
-    });
-
-    // 调用浏览器打印
-    window.print();
-
-    // 打印对话框关闭后恢复状态
-    setTimeout(() => {
-      // 恢复隐藏的元素
-      document.querySelectorAll('.scroll-progress, .cursor-glow, .back-to-top, .pdf-loading, .terminal-skip, .hero-scroll, .hero-download, .navbar, .nav-overlay, .section-wave').forEach(el => {
-        el.style.display = '';
-      });
-
-      // 恢复动画元素状态
-      document.querySelectorAll('.fade-up, .tl-item, .github-card, .award-item, .skill-card, .skill-tag').forEach(el => {
-        el.style.opacity = '';
-        el.style.transform = '';
-      });
-    }, 1000);
+  // 点击时检查文件是否存在
+  downloadBtn.addEventListener('click', async (e) => {
+    try {
+      const response = await fetch('刘鑫宇_全栈开发工程师_简历.pdf', { method: 'HEAD' });
+      if (!response.ok) {
+        e.preventDefault();
+        alert('请先运行以下命令生成 PDF：\n\nnpm run pdf');
+      }
+    } catch (error) {
+      e.preventDefault();
+      alert('请先运行以下命令生成 PDF：\n\nnpm run pdf');
+    }
   });
 })();
 </script>

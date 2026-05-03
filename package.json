@@ -1,0 +1,8 @@
+{
+  "scripts": {
+    "pdf": "node generate-pdf.mjs"
+  },
+  "devDependencies": {
+    "puppeteer": "^24.42.0"
+  }
+}
