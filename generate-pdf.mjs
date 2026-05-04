@@ -62,9 +62,9 @@ async function generatePDF() {
       // 时间线
       const timeline = Array.from(document.querySelectorAll('.tl-item')).map(el => ({
         year: el.querySelector('.tl-year')?.textContent.trim() || '',
-        title: el.querySelector('.tl-content h3')?.textContent.trim() || '',
-        company: el.querySelector('.tl-company')?.textContent.trim() || '',
-        desc: el.querySelector('.tl-content p')?.textContent.trim() || ''
+        title: el.querySelector('.tl-title')?.textContent.trim() || '',
+        company: '',
+        desc: el.querySelector('.tl-desc')?.textContent.trim() || ''
       }));
 
       // 项目
@@ -203,13 +203,13 @@ async function generatePDF() {
   .section { margin-bottom: 10px; }
 
   /* ===== Timeline ===== */
-  .timeline { padding-left: 14px; border-left: 2px solid #e0e0e0; }
-  .tl-item { position: relative; padding-left: 10px; padding-bottom: 6px; margin-bottom: 2px; break-inside: avoid; }
-  .tl-dot { position: absolute; left: -19px; top: 4px; width: 7px; height: 7px; background: #2B7FD8; border-radius: 50%; }
-  .tl-year { font-size: 7.5pt; color: #2B7FD8; font-weight: bold; }
-  .tl-title { font-size: 9pt; font-weight: bold; }
-  .tl-company { font-size: 7.5pt; color: #666; }
-  .tl-desc { font-size: 8pt; color: #444; margin-top: 1px; }
+  .timeline { padding-left: 16px; border-left: 2px solid #e0e0e0; }
+  .tl-item { position: relative; padding-left: 12px; padding-bottom: 8px; margin-bottom: 4px; break-inside: avoid; }
+  .tl-dot { position: absolute; left: -21px; top: 5px; width: 8px; height: 8px; background: #2B7FD8; border-radius: 50%; }
+  .tl-year { font-size: 8pt; color: #2B7FD8; font-weight: bold; margin-bottom: 1px; }
+  .tl-title { font-size: 9.5pt; font-weight: bold; color: #1a1a1a; }
+  .tl-company { font-size: 8pt; color: #666; }
+  .tl-desc { font-size: 8pt; color: #444; margin-top: 2px; line-height: 1.5; }
 
   /* ===== Project Cards ===== */
   .project-card {
@@ -302,7 +302,7 @@ async function generatePDF() {
       <div class="tl-dot"></div>
       <div class="tl-year">${t.year}</div>
       <div class="tl-title">${t.title}</div>
-      <div class="tl-company">${t.company}</div>
+      ${t.company ? `<div class="tl-company">${t.company}</div>` : ''}
       <div class="tl-desc">${t.desc}</div>
     </div>`).join('')}
   </div>
