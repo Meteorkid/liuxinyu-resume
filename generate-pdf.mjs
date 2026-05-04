@@ -2,12 +2,15 @@
 
 /**
  * 使用 Puppeteer 将 HTML 简历转换为 PDF
- * 核心策略：注入完整的「打印重构 CSS」，将所有复杂布局重置为线性流式
+ *
+ * 策略：从原页面提取数据 → 生成干净的 PDF 专用 HTML → 渲染 PDF
+ * 这样完全不依赖原网页的复杂 CSS 布局
  */
 
 import puppeteer from 'puppeteer';
 import { fileURLToPath } from 'url';
 import { dirname, resolve } from 'path';
+import { readFileSync } from 'fs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -32,542 +35,359 @@ async function generatePDF() {
       timeout: 30000
     });
 
-    await page.emulateMediaType('print');
     await page.evaluateHandle('document.fonts.ready');
     await new Promise(resolve => setTimeout(resolve, 2000));
 
     // ============================================================
-    // 注入完整的打印重构 CSS
-    // 核心思路：重置所有布局为 block 流式，消除绝对定位/flex/grid 干扰
+    // 第一步：从原页面提取所有数据
     // ============================================================
-    console.log('🎨 正在注入打印重构样式...');
-    await page.addStyleTag({
-      content: `
-        /* ========== 全局重置 ========== */
-        *, *::before, *::after {
-          animation: none !important;
-          transition: none !important;
-          transform: none !important;
-          will-change: auto !important;
-          filter: none !important;
-          backdrop-filter: none !important;
-        }
-
-        body {
-          background: #fff !important;
-          color: #1a1a1a !important;
-          font-size: 9pt !important;
-          line-height: 1.5 !important;
-        }
-
-        /* ========== 隐藏不需要的元素 ========== */
-        .scroll-progress, .cursor-glow, .back-to-top, .terminal-skip,
-        .hero-scroll, .hero-download, .navbar, .nav-overlay, .section-wave,
-        .avatar-glow, .avatar-border, .avatar-status, .avatar-border-inner,
-        .project-card-bg-text, .pdf-loading {
-          display: none !important;
-        }
-
-        /* ========== 所有 section 重置为 block ========== */
-        section, div, ul, ol, dl, form, figure, main {
-          display: block !important;
-        }
-
-        /* ========== Hero 终端区域 ========== */
-        .hero {
-          background: #0d1117 !important;
-          padding: 8mm 0 !important;
-          min-height: auto !important;
-        }
-
-        .terminal-window {
-          max-width: 100% !important;
-          background: #161b22 !important;
-          border-radius: 6px !important;
-          box-shadow: none !important;
-          font-size: 8pt !important;
-          min-height: auto !important;
-        }
-
-        .terminal-header {
-          padding: 4px 10px !important;
-          background: #21262d !important;
-          border-radius: 6px 6px 0 0 !important;
-        }
-
-        .terminal-dot {
-          width: 8px !important;
-          height: 8px !important;
-          display: inline-block !important;
-          border-radius: 50% !important;
-          margin-right: 4px !important;
-        }
-
-        .terminal-body {
-          padding: 8px 12px !important;
-          min-height: auto !important;
-        }
-
-        .terminal-line {
-          opacity: 1 !important;
-          margin-bottom: 2px !important;
-          font-size: 8pt !important;
-          line-height: 1.5 !important;
-          white-space: pre-wrap !important;
-          word-break: break-all !important;
-        }
-
-        /* ========== About 区域 ========== */
-        .about {
-          padding: 6mm 0 !important;
-          background: #fefcf6 !important;
-        }
-
-        .about-grid {
-          display: flex !important;
-          flex-direction: row !important;
-          align-items: flex-start !important;
-          gap: 12px !important;
-        }
-
-        .about-avatar {
-          flex: 0 0 80px !important;
-          display: block !important;
-          text-align: center !important;
-        }
-
-        .avatar-wrapper {
-          position: static !important;
-          width: 70px !important;
-          height: 70px !important;
-        }
-
-        .avatar-frame {
-          position: static !important;
-          width: 70px !important;
-          height: 70px !important;
-          border-radius: 50% !important;
-          overflow: hidden !important;
-        }
-
-        .avatar-frame img {
-          width: 100% !important;
-          height: 100% !important;
-          object-fit: cover !important;
-          display: block !important;
-        }
-
-        .avatar-name {
-          font-size: 9pt !important;
-          font-weight: bold !important;
-          margin-top: 4px !important;
-        }
-
-        .avatar-school {
-          font-size: 7pt !important;
-          color: #666 !important;
-          margin-top: 2px !important;
-        }
-
-        .about-info {
-          flex: 1 !important;
-          display: block !important;
-        }
-
-        .about-bio {
-          font-size: 8.5pt !important;
-          line-height: 1.6 !important;
-          margin-bottom: 6px !important;
-        }
-
-        .about-highlights {
-          display: block !important;
-        }
-
-        .highlight-item {
-          font-size: 8pt !important;
-          padding: 2px 0 !important;
-          line-height: 1.4 !important;
-        }
-
-        .highlight-item::before {
-          content: "• " !important;
-          color: #F4D758 !important;
-          font-weight: bold !important;
-        }
-
-        /* ========== 通用 section 标题 ========== */
-        .section-label {
-          font-size: 7pt !important;
-          color: #888 !important;
-          text-transform: uppercase !important;
-          letter-spacing: 2px !important;
-          margin-bottom: 2px !important;
-        }
-
-        h2 {
-          font-size: 14pt !important;
-          margin-bottom: 6px !important;
-          color: #1a1a1a !important;
-        }
-
-        h2 em {
-          color: #2B7FD8 !important;
-          font-style: normal !important;
-        }
-
-        /* ========== Experience 时间线 ========== */
-        .experience {
-          padding: 6mm 0 !important;
-        }
-
-        .timeline {
-          display: block !important;
-          position: static !important;
-          padding-left: 16px !important;
-          border-left: 2px solid #e0e0e0 !important;
-        }
-
-        .timeline-line-progress {
-          display: none !important;
-        }
-
-        .tl-item {
-          position: static !important;
-          padding: 0 0 8px 12px !important;
-          margin-bottom: 4px !important;
-          break-inside: avoid !important;
-          page-break-inside: avoid !important;
-        }
-
-        .tl-dot {
-          position: absolute !important;
-          left: -21px !important;
-          top: 4px !important;
-          width: 8px !important;
-          height: 8px !important;
-          background: #2B7FD8 !important;
-          border-radius: 50% !important;
-          display: block !important;
-        }
-
-        .tl-card {
-          display: block !important;
-          padding: 0 !important;
-          background: none !important;
-          border: none !important;
-          box-shadow: none !important;
-          border-radius: 0 !important;
-        }
-
-        .tl-year {
-          font-size: 7.5pt !important;
-          color: #2B7FD8 !important;
-          font-weight: bold !important;
-          margin-bottom: 2px !important;
-        }
-
-        .tl-content h3 {
-          font-size: 9.5pt !important;
-          margin-bottom: 1px !important;
-          color: #1a1a1a !important;
-        }
-
-        .tl-company {
-          font-size: 8pt !important;
-          color: #666 !important;
-          margin-bottom: 2px !important;
-        }
-
-        .tl-content p {
-          font-size: 8pt !important;
-          line-height: 1.5 !important;
-          color: #333 !important;
-        }
-
-        /* ========== Projects 项目卡片 ========== */
-        .projects {
-          padding: 6mm 0 !important;
-          background: #fefcf6 !important;
-        }
-
-        .project-grid {
-          display: block !important;
-        }
-
-        .project-card {
-          position: static !important;
-          display: block !important;
-          padding: 8px 10px !important;
-          margin-bottom: 6px !important;
-          border-radius: 6px !important;
-          min-height: auto !important;
-          overflow: visible !important;
-          break-inside: avoid !important;
-          page-break-inside: avoid !important;
-          /* 保留背景色 */
-        }
-
-        .project-card--1 { background: linear-gradient(135deg, #F4D758 0%, #F7A946 100%) !important; }
-        .project-card--2 { background: linear-gradient(135deg, #2B7FD8 0%, #1a5fa0 100%) !important; color: #fff !important; }
-        .project-card--3 { background: linear-gradient(135deg, #6C5CE7 0%, #a55eea 100%) !important; color: #fff !important; }
-        .project-card--4 { background: linear-gradient(135deg, #28c840 0%, #1a9c30 100%) !important; color: #fff !important; }
-
-        .project-card-content {
-          position: static !important;
-          display: block !important;
-        }
-
-        .project-card-emoji {
-          font-size: 14pt !important;
-          display: inline !important;
-          margin-right: 4px !important;
-        }
-
-        .project-card-title {
-          font-size: 10pt !important;
-          font-weight: bold !important;
-          display: inline !important;
-          margin-bottom: 0 !important;
-        }
-
-        .project-card-desc {
-          font-size: 8pt !important;
-          line-height: 1.4 !important;
-          margin-top: 3px !important;
-          color: inherit !important;
-          opacity: 0.9 !important;
-        }
-
-        .project-card-tag {
-          font-size: 7pt !important;
-          padding: 1px 6px !important;
-          background: rgba(255,255,255,0.2) !important;
-          border-radius: 3px !important;
-          display: inline-block !important;
-          margin-top: 3px !important;
-        }
-
-        /* ========== GitHub 开源项目 ========== */
-        .github {
-          padding: 6mm 0 !important;
-        }
-
-        .github-grid {
-          display: block !important;
-        }
-
-        .github-card {
-          display: block !important;
-          padding: 6px 8px !important;
-          margin-bottom: 4px !important;
-          border: 1px solid #e0e0e0 !important;
-          border-radius: 4px !important;
-          background: #fff !important;
-          break-inside: avoid !important;
-          page-break-inside: avoid !important;
-        }
-
-        .github-card-name {
-          font-size: 9pt !important;
-          font-weight: bold !important;
-          color: #2B7FD8 !important;
-          margin-bottom: 2px !important;
-        }
-
-        .github-card-desc {
-          font-size: 7.5pt !important;
-          line-height: 1.4 !important;
-          color: #555 !important;
-          margin-bottom: 3px !important;
-        }
-
-        .github-card-meta {
-          font-size: 7pt !important;
-          color: #888 !important;
-        }
-
-        .github-card-lang, .github-card-stars, .github-card-forks {
-          font-size: 7pt !important;
-          color: #888 !important;
-        }
-
-        /* ========== Awards 获奖 ========== */
-        .awards {
-          padding: 6mm 0 !important;
-          background: #fefcf6 !important;
-        }
-
-        .award-stats {
-          display: flex !important;
-          flex-direction: row !important;
-          gap: 12px !important;
-          margin-bottom: 8px !important;
-          break-inside: avoid !important;
-          page-break-inside: avoid !important;
-        }
-
-        .award-stat {
-          flex: 1 !important;
-          text-align: center !important;
-          padding: 4px !important;
-        }
-
-        .award-stat-number {
-          font-size: 16pt !important;
-          font-weight: bold !important;
-          color: #F4D758 !important;
-        }
-
-        .award-stat-label {
-          font-size: 7pt !important;
-          color: #888 !important;
-        }
-
-        .award-category-title {
-          font-size: 9pt !important;
-          font-weight: bold !important;
-          margin-bottom: 3px !important;
-          margin-top: 6px !important;
-          color: #1a1a1a !important;
-        }
-
-        .award-item {
-          padding: 2px 0 !important;
-          margin-bottom: 2px !important;
-          break-inside: avoid !important;
-          page-break-inside: avoid !important;
-        }
-
-        .award-text {
-          font-size: 8pt !important;
-          line-height: 1.4 !important;
-          color: #333 !important;
-        }
-
-        .award-year {
-          font-size: 7pt !important;
-          color: #888 !important;
-        }
-
-        /* ========== Skills 技能 ========== */
-        .skills {
-          padding: 6mm 0 !important;
-        }
-
-        .skill-grid {
-          display: block !important;
-        }
-
-        .skill-category {
-          margin-bottom: 6px !important;
-          break-inside: avoid !important;
-          page-break-inside: avoid !important;
-        }
-
-        .skill-category-title {
-          font-size: 9pt !important;
-          font-weight: bold !important;
-          margin-bottom: 3px !important;
-          color: #1a1a1a !important;
-        }
-
-        .skill-tags {
-          display: flex !important;
-          flex-wrap: wrap !important;
-          gap: 3px !important;
-        }
-
-        .skill-tag {
-          font-size: 7.5pt !important;
-          padding: 2px 6px !important;
-          background: #f0f0f0 !important;
-          border-radius: 3px !important;
-          color: #333 !important;
-          display: inline-block !important;
-        }
-
-        /* ========== Contact 联系 ========== */
-        .contact {
-          padding: 6mm 0 !important;
-          background: #fefcf6 !important;
-          text-align: center !important;
-        }
-
-        .contact-info {
-          font-size: 8.5pt !important;
-        }
-
-        .contact-link {
-          font-size: 8.5pt !important;
-          color: #2B7FD8 !important;
-          text-decoration: none !important;
-        }
-
-        /* ========== 分页控制 ========== */
-        .tl-item, .project-card, .github-card, .award-item, .skill-category,
-        .terminal-window, .about-grid, .award-stats {
-          break-inside: avoid !important;
-          page-break-inside: avoid !important;
-        }
-
-        .section-label, h2, h3, .tl-year, .award-category-title, .skill-category-title {
-          break-after: avoid !important;
-          page-break-after: avoid !important;
-        }
-
-        /* ========== 链接样式 ========== */
-        a {
-          color: #2B7FD8 !important;
-          text-decoration: none !important;
-        }
-      `
+    console.log('📦 正在提取页面数据...');
+    const data = await page.evaluate(() => {
+      const getText = (sel) => {
+        const el = document.querySelector(sel);
+        return el ? el.textContent.trim() : '';
+      };
+      const getAll = (sel) => Array.from(document.querySelectorAll(sel)).map(el => el.textContent.trim());
+      const getHTML = (sel) => {
+        const el = document.querySelector(sel);
+        return el ? el.innerHTML : '';
+      };
+
+      // 终端行
+      const terminalLines = Array.from(document.querySelectorAll('.terminal-line')).map(el => ({
+        html: el.innerHTML,
+        isCommand: el.querySelector('.prompt') !== null
+      }));
+
+      // 时间线
+      const timeline = Array.from(document.querySelectorAll('.tl-item')).map(el => ({
+        year: el.querySelector('.tl-year')?.textContent.trim() || '',
+        title: el.querySelector('.tl-content h3')?.textContent.trim() || '',
+        company: el.querySelector('.tl-company')?.textContent.trim() || '',
+        desc: el.querySelector('.tl-content p')?.textContent.trim() || ''
+      }));
+
+      // 项目
+      const projects = Array.from(document.querySelectorAll('.project-card')).map(el => ({
+        emoji: el.querySelector('.project-card-emoji')?.textContent.trim() || '',
+        title: el.querySelector('.project-card-title')?.textContent.trim() || '',
+        desc: el.querySelector('.project-card-desc')?.textContent.trim() || '',
+        tag: el.querySelector('.project-card-tag')?.textContent.trim() || '',
+        colorClass: el.className.match(/project-card--\d/)?.[0] || 'project-card--1'
+      }));
+
+      // GitHub
+      const githubCards = Array.from(document.querySelectorAll('.github-card')).map(el => ({
+        name: el.querySelector('.github-card-name')?.textContent.trim() || '',
+        desc: el.querySelector('.github-card-desc')?.textContent.trim() || '',
+        lang: el.querySelector('.github-card-lang')?.textContent.trim() || '',
+        stars: el.querySelector('.github-card-stars')?.textContent.trim() || '',
+        forks: el.querySelector('.github-card-forks')?.textContent.trim() || ''
+      }));
+
+      // 获奖统计
+      const awardStats = Array.from(document.querySelectorAll('.award-stat')).map(el => ({
+        number: el.querySelector('.award-stat-number')?.dataset.target || el.querySelector('.award-stat-number')?.textContent.trim() || '0',
+        label: el.querySelector('.award-stat-label')?.textContent.trim() || ''
+      }));
+
+      // 获奖分类
+      const awardCategories = Array.from(document.querySelectorAll('.award-group')).map(cat => ({
+        title: cat.querySelector('.award-group-title')?.textContent.trim() || '',
+        items: Array.from(cat.querySelectorAll('.award-item')).map(item => ({
+          text: item.querySelector('.award-detail')?.textContent.trim() || item.querySelector('.award-title')?.textContent.trim() || '',
+          year: ''
+        }))
+      }));
+
+      // 技能
+      const skills = Array.from(document.querySelectorAll('.skill-card')).map(cat => ({
+        title: cat.querySelector('.skill-card-title')?.textContent.trim() || '',
+        tags: Array.from(cat.querySelectorAll('.skill-tag')).map(t => t.textContent.trim())
+      }));
+
+      // 联系
+      const contactLinks = Array.from(document.querySelectorAll('.contact-link')).map(el => ({
+        text: el.textContent.trim(),
+        href: el.href
+      }));
+
+      // 头像
+      const avatarImg = document.querySelector('.avatar-frame img');
+      const avatarSrc = avatarImg ? avatarImg.src : '';
+
+      return {
+        terminalLines,
+        timeline,
+        projects,
+        githubCards,
+        awardStats,
+        awardCategories,
+        skills,
+        contactLinks,
+        avatarSrc
+      };
     });
 
-    // DOM 预处理
-    console.log('🔧 正在处理 DOM...');
-    await page.evaluate(() => {
-      // 显示所有动画元素
-      document.querySelectorAll('.fade-up, .tl-item, .github-card, .award-item, .skill-card, .skill-tag').forEach(el => {
-        el.classList.add('is-visible');
-        el.style.opacity = '1';
-      });
+    console.log(`   提取到: ${data.terminalLines.length} 终端行, ${data.timeline.length} 经历, ${data.projects.length} 项目, ${data.githubCards.length} 开源, ${data.skills.length} 技能分类`);
 
-      // 隐藏装饰元素
-      document.querySelectorAll('.scroll-progress, .cursor-glow, .back-to-top, .terminal-skip',
-        '.hero-scroll, .hero-download, .navbar, .nav-overlay, .section-wave',
-        '.avatar-glow, .avatar-border, .avatar-status, .avatar-border-inner',
-        '.project-card-bg-text, .pdf-loading, .timeline-line-progress'
-      ).forEach(el => el.style.display = 'none');
+    // ============================================================
+    // 第二步：生成 PDF 专用的干净 HTML
+    // ============================================================
+    console.log('🎨 正在生成 PDF 专用 HTML...');
 
-      // 终端行全部可见
-      document.querySelectorAll('.terminal-line').forEach(el => el.style.opacity = '1');
+    const colorMap = {
+      'project-card--1': 'background:linear-gradient(135deg,#F4D758,#F7A946)',
+      'project-card--2': 'background:linear-gradient(135deg,#2B7FD8,#1a5fa0);color:#fff',
+      'project-card--3': 'background:linear-gradient(135deg,#6C5CE7,#a55eea);color:#fff',
+      'project-card--4': 'background:linear-gradient(135deg,#28c840,#1a9c30);color:#fff'
+    };
 
-      // 获奖数字显示
-      document.querySelectorAll('.award-stat-number').forEach(el => {
-        el.textContent = el.dataset.target;
-      });
+    const pdfHTML = `<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<style>
+  @page { size: A4; margin: 10mm 12mm; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, "PingFang SC", "Microsoft YaHei", "Helvetica Neue", sans-serif;
+    color: #1a1a1a;
+    font-size: 9pt;
+    line-height: 1.55;
+    background: #fff;
+  }
 
-      // highlight-item 添加 bullet（如果还没有）
-      document.querySelectorAll('.highlight-item').forEach(el => {
-        if (!el.textContent.startsWith('•')) {
-          el.prepend('• ');
-        }
-      });
-    });
+  /* ===== Hero ===== */
+  .hero {
+    background: #0d1117;
+    padding: 10px 14px;
+    border-radius: 6px;
+    margin-bottom: 10px;
+    color: #c9d1d9;
+    font-family: "SF Mono", "Fira Code", "Consolas", monospace;
+    font-size: 8pt;
+    line-height: 1.6;
+  }
+  .hero-header {
+    display: flex; align-items: center; gap: 6px;
+    margin-bottom: 6px; padding-bottom: 6px;
+    border-bottom: 1px solid #21262d;
+  }
+  .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+  .dot-r { background: #ff5f57; }
+  .dot-y { background: #febc2e; }
+  .dot-g { background: #28c840; }
+  .hero-title { color: #8b949e; font-size: 7.5pt; margin-left: 6px; }
+  .line { margin-bottom: 1px; }
+  .line-cmd { color: #58a6ff; }
+  .line-prompt { color: #F4D758; }
+  .line-val { color: #c9d1d9; }
 
-    // 生成 PDF
-    console.log('📝 正在生成 PDF...');
+  /* ===== About ===== */
+  .about { display: flex; align-items: flex-start; gap: 14px; margin-bottom: 10px; }
+  .about-avatar { flex: 0 0 72px; }
+  .about-avatar img { width: 72px; height: 72px; border-radius: 50%; object-fit: cover; display: block; }
+  .about-avatar-name { font-size: 9pt; font-weight: bold; text-align: center; margin-top: 4px; }
+  .about-avatar-school { font-size: 7pt; color: #888; text-align: center; margin-top: 1px; }
+  .about-body { flex: 1; }
+  .about-bio { font-size: 8.5pt; margin-bottom: 5px; }
+  .about-highlights { list-style: none; }
+  .about-highlights li { font-size: 8pt; padding: 1px 0; }
+  .about-highlights li::before { content: "• "; color: #F4D758; font-weight: bold; }
+
+  /* ===== Section Header ===== */
+  .sec-label { font-size: 7pt; color: #999; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 1px; }
+  .sec-title { font-size: 13pt; font-weight: bold; margin-bottom: 6px; color: #1a1a1a; }
+  .sec-title em { font-style: normal; color: #2B7FD8; }
+  .section { margin-bottom: 10px; }
+
+  /* ===== Timeline ===== */
+  .timeline { padding-left: 14px; border-left: 2px solid #e0e0e0; }
+  .tl-item { position: relative; padding-left: 10px; padding-bottom: 6px; margin-bottom: 2px; break-inside: avoid; }
+  .tl-dot { position: absolute; left: -19px; top: 4px; width: 7px; height: 7px; background: #2B7FD8; border-radius: 50%; }
+  .tl-year { font-size: 7.5pt; color: #2B7FD8; font-weight: bold; }
+  .tl-title { font-size: 9pt; font-weight: bold; }
+  .tl-company { font-size: 7.5pt; color: #666; }
+  .tl-desc { font-size: 8pt; color: #444; margin-top: 1px; }
+
+  /* ===== Project Cards ===== */
+  .project-card {
+    padding: 7px 10px; border-radius: 6px; margin-bottom: 5px;
+    break-inside: avoid;
+  }
+  .project-card--1 { background: linear-gradient(135deg, #F4D758, #F7A946); }
+  .project-card--2 { background: linear-gradient(135deg, #2B7FD8, #1a5fa0); color: #fff; }
+  .project-card--3 { background: linear-gradient(135deg, #6C5CE7, #a55eea); color: #fff; }
+  .project-card--4 { background: linear-gradient(135deg, #28c840, #1a9c30); color: #fff; }
+  .project-emoji { font-size: 12pt; margin-right: 4px; }
+  .project-title { font-size: 10pt; font-weight: bold; display: inline; }
+  .project-desc { font-size: 7.5pt; margin-top: 2px; opacity: 0.9; }
+  .project-tag { font-size: 6.5pt; padding: 1px 5px; background: rgba(255,255,255,0.2); border-radius: 3px; display: inline-block; margin-top: 2px; }
+
+  /* ===== GitHub Grid ===== */
+  .github-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
+  .github-card {
+    padding: 5px 7px; border: 1px solid #e5e5e5; border-radius: 4px;
+    break-inside: avoid;
+  }
+  .gh-name { font-size: 8.5pt; font-weight: bold; color: #2B7FD8; }
+  .gh-desc { font-size: 7pt; color: #666; margin: 1px 0; }
+  .gh-meta { font-size: 6.5pt; color: #999; }
+
+  /* ===== Awards ===== */
+  .award-stats { display: flex; gap: 10px; margin-bottom: 6px; break-inside: avoid; }
+  .award-stat { flex: 1; text-align: center; background: #f8f8f8; padding: 4px; border-radius: 4px; }
+  .award-num { font-size: 16pt; font-weight: bold; color: #F4D758; }
+  .award-lbl { font-size: 6.5pt; color: #888; }
+  .award-cat-title { font-size: 9pt; font-weight: bold; margin: 5px 0 2px; }
+  .award-item { font-size: 8pt; padding: 1px 0; break-inside: avoid; }
+  .award-year { font-size: 6.5pt; color: #999; margin-left: 4px; }
+
+  /* ===== Skills ===== */
+  .skill-cat { margin-bottom: 5px; break-inside: avoid; }
+  .skill-cat-title { font-size: 8.5pt; font-weight: bold; margin-bottom: 2px; }
+  .skill-tags { display: flex; flex-wrap: wrap; gap: 3px; }
+  .skill-tag { font-size: 7.5pt; padding: 2px 6px; background: #f0f0f0; border-radius: 3px; }
+
+  /* ===== Contact ===== */
+  .contact { text-align: center; margin-top: 8px; padding-top: 8px; border-top: 1px solid #e0e0e0; }
+  .contact a { color: #2B7FD8; text-decoration: none; font-size: 8.5pt; margin: 0 8px; }
+</style>
+</head>
+<body>
+
+<!-- Hero -->
+<div class="hero">
+  <div class="hero-header">
+    <span class="dot dot-r"></span>
+    <span class="dot dot-y"></span>
+    <span class="dot dot-g"></span>
+    <span class="hero-title">liuxinyu@gdstnu ~ %</span>
+  </div>
+  ${data.terminalLines.map(l => `<div class="line">${l.html}</div>`).join('\n  ')}
+</div>
+
+<!-- About -->
+<div class="section">
+  <div class="sec-label">About Me</div>
+  <div class="sec-title">技术与创意的<em>交叉探索者</em></div>
+  <div class="about">
+    <div class="about-avatar">
+      ${data.avatarSrc ? `<img src="${data.avatarSrc}" alt="头像">` : ''}
+      <div class="about-avatar-name">刘鑫宇</div>
+      <div class="about-avatar-school">广东技术师范大学<br>国际教育学院 · 计算机科学与技术</div>
+    </div>
+    <div class="about-body">
+      <div class="about-bio">我是刘鑫宇，广东技术师范大学国际教育学院 2024 级计算机科学与技术专业学生。现任学院科创部负责人，曾任新媒体信息部代理部长、组织委员、街舞社副社长等职务。热衷于小程序开发、Python 数据分析与新媒体视觉设计，在技术与创意的交叉领域持续探索——既写代码也做设计。</div>
+      <ul class="about-highlights">
+        <li>省级大创立项项目核心成员，负责小程序前端开发</li>
+        <li>Python 数据爬取与分析，单项目处理数据量 10,000+</li>
+        <li>学院新媒体信息部骨干，单条视频点击量突破 30,000</li>
+        <li>累计获省级 / 市级 / 校级 / 院级奖项 20+ 项</li>
+        <li>3 段实习经历（新西兰 / 广州 / 佛山），具备跨文化协作能力</li>
+        <li>GitHub 开源项目贡献，涵盖 AI 工具链、跨境电商、代码分析</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- Experience -->
+<div class="section">
+  <div class="sec-label">Experience</div>
+  <div class="sec-title">实习与<em>成长轨迹</em></div>
+  <div class="timeline">
+    ${data.timeline.map(t => `
+    <div class="tl-item">
+      <div class="tl-dot"></div>
+      <div class="tl-year">${t.year}</div>
+      <div class="tl-title">${t.title}</div>
+      <div class="tl-company">${t.company}</div>
+      <div class="tl-desc">${t.desc}</div>
+    </div>`).join('')}
+  </div>
+</div>
+
+<!-- Projects -->
+<div class="section">
+  <div class="sec-label">Projects</div>
+  <div class="sec-title">核心项目作品</div>
+  ${data.projects.map(p => `
+  <div class="project-card ${p.colorClass}">
+    <span class="project-emoji">${p.emoji}</span>
+    <span class="project-title">${p.title}</span>
+    <div class="project-desc">${p.desc}</div>
+    <span class="project-tag">${p.tag}</span>
+  </div>`).join('')}
+</div>
+
+<!-- GitHub -->
+<div class="section">
+  <div class="sec-label">Open Source</div>
+  <div class="sec-title">GitHub 开源项目</div>
+  <div class="github-grid">
+    ${data.githubCards.map(g => `
+    <div class="github-card">
+      <div class="gh-name">${g.name}</div>
+      <div class="gh-desc">${g.desc}</div>
+      <div class="gh-meta">${[g.lang, g.stars, g.forks].filter(Boolean).join(' · ')}</div>
+    </div>`).join('')}
+  </div>
+</div>
+
+<!-- Awards -->
+<div class="section">
+  <div class="sec-label">Awards</div>
+  <div class="sec-title">获奖与荣誉</div>
+  <div class="award-stats">
+    ${data.awardStats.map(s => `
+    <div class="award-stat">
+      <div class="award-num">${s.number}</div>
+      <div class="award-lbl">${s.label}</div>
+    </div>`).join('')}
+  </div>
+  ${data.awardCategories.map(cat => `
+  <div class="award-cat-title">${cat.title}</div>
+  ${cat.items.map(item => `
+  <div class="award-item">• ${item.text}<span class="award-year">${item.year}</span></div>`).join('')}`).join('')}
+</div>
+
+<!-- Skills -->
+<div class="section">
+  <div class="sec-label">Skills</div>
+  <div class="sec-title">技术栈</div>
+  ${data.skills.map(s => `
+  <div class="skill-cat">
+    <div class="skill-cat-title">${s.title}</div>
+    <div class="skill-tags">
+      ${s.tags.map(t => `<span class="skill-tag">${t}</span>`).join('')}
+    </div>
+  </div>`).join('')}
+</div>
+
+<!-- Contact -->
+<div class="contact">
+  ${data.contactLinks.map(c => `<a href="${c.href}">${c.text}</a>`).join('')}
+</div>
+
+</body>
+</html>`;
+
+    // ============================================================
+    // 第三步：用生成的 HTML 渲染 PDF
+    // ============================================================
+    console.log('📝 正在渲染 PDF...');
+
+    // 设置页面内容
+    await page.setContent(pdfHTML, { waitUntil: 'domcontentloaded' });
+    await page.evaluateHandle('document.fonts.ready');
+    await new Promise(resolve => setTimeout(resolve, 500));
+
     await page.pdf({
       path: PDF_FILE,
       format: 'A4',
       printBackground: true,
-      margin: {
-        top: '8mm',
-        right: '10mm',
-        bottom: '8mm',
-        left: '10mm'
-      },
+      margin: { top: '8mm', right: '10mm', bottom: '8mm', left: '10mm' },
       preferCSSPageSize: false,
       displayHeaderFooter: false
     });
