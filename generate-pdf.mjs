@@ -2,13 +2,12 @@
 
 /**
  * 使用 Puppeteer 将 HTML 简历转换为 PDF
- * 完美保留所有 CSS 样式、颜色、布局
+ * 核心策略：注入完整的「打印重构 CSS」，将所有复杂布局重置为线性流式
  */
 
 import puppeteer from 'puppeteer';
 import { fileURLToPath } from 'url';
 import { dirname, resolve } from 'path';
-import { existsSync } from 'fs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -27,387 +26,533 @@ async function generatePDF() {
   try {
     const page = await browser.newPage();
 
-    // 加载 HTML 文件
     console.log('📄 正在加载简历页面...');
     await page.goto(`file://${HTML_FILE}`, {
       waitUntil: 'networkidle0',
       timeout: 30000
     });
 
-    // 模拟打印媒体类型
     await page.emulateMediaType('print');
-
-    // 等待字体加载
     await page.evaluateHandle('document.fonts.ready');
-
-    // 等待一段时间让动画完成
     await new Promise(resolve => setTimeout(resolve, 2000));
 
-    // 注入打印专用 CSS，防止组件被页面拆分
+    // ============================================================
+    // 注入完整的打印重构 CSS
+    // 核心思路：重置所有布局为 block 流式，消除绝对定位/flex/grid 干扰
+    // ============================================================
+    console.log('🎨 正在注入打印重构样式...');
     await page.addStyleTag({
       content: `
-        /* 单个卡片/条目禁止内部断页 */
-        .project-card,
-        .github-card,
-        .tl-item,
-        .award-item,
-        .terminal-window {
-          break-inside: avoid !important;
-          page-break-inside: avoid !important;
+        /* ========== 全局重置 ========== */
+        *, *::before, *::after {
+          animation: none !important;
+          transition: none !important;
+          transform: none !important;
+          will-change: auto !important;
+          filter: none !important;
+          backdrop-filter: none !important;
         }
 
-        /* 标题与紧跟的内容不分离 */
-        .section-label,
-        .about-headline,
-        .experience-headline,
-        .projects-headline,
-        .github-headline,
-        .awards-headline,
-        .skills-headline,
-        h2,
-        h3 {
-          break-after: avoid !important;
-          page-break-after: avoid !important;
+        body {
+          background: #fff !important;
+          color: #1a1a1a !important;
+          font-size: 9pt !important;
+          line-height: 1.5 !important;
         }
 
-        /* 覆盖可能导致断页问题的 min-height */
-        .hero,
-        .terminal-window,
-        .terminal-body,
-        .project-card {
-          min-height: auto !important;
-        }
-
-        /* Grid 改为纵向排列，避免同行卡片一起跨页 */
-        .project-grid {
-          display: block !important;
-        }
-
-        .project-grid .project-card {
-          margin-bottom: 0.5rem !important;
-        }
-
-        .github-grid {
-          display: block !important;
-        }
-
-        .github-grid .github-card {
-          margin-bottom: 0.3rem !important;
-        }
-
-        /* 获奖统计行保持整体 */
-        .award-stats {
-          break-inside: avoid !important;
-        }
-
-        /* 全局紧凑间距 */
-        section {
-          padding-top: 0.3rem !important;
-          padding-bottom: 0.3rem !important;
-        }
-
-        .hero {
-          padding: 0.3rem !important;
-          min-height: auto !important;
-        }
-
-        .about-inner,
-        .experience-inner,
-        .projects-inner,
-        .github-inner,
-        .awards-inner,
-        .skills-inner,
-        .contact-inner {
-          padding-top: 0.2rem !important;
-          padding-bottom: 0.2rem !important;
-        }
-
-        /* 缩小卡片间距 */
-        .project-grid,
-        .github-grid {
-          gap: 0.5rem !important;
-        }
-
-        .tl-item {
-          padding-bottom: 0.3rem !important;
-          margin-bottom: 0.3rem !important;
-        }
-
-        .award-item {
-          margin-bottom: 0.4rem !important;
-        }
-
-        .skill-grid {
-          gap: 0.3rem !important;
-        }
-
-        .skill-tag {
-          padding: 0.12rem 0.4rem !important;
-          font-size: 0.7rem !important;
-        }
-
-        /* 缩小标题字号 */
-        .section-label {
-          font-size: 0.6rem !important;
-          margin-bottom: 0.15rem !important;
-        }
-
-        h2 {
-          font-size: 1.2rem !important;
-          margin-bottom: 0.5rem !important;
-        }
-
-        /* 技能标签 */
-        .skill-category-title {
-          font-size: 0.75rem !important;
-          margin-bottom: 0.3rem !important;
-        }
-
-        .skill-tags {
-          gap: 0.2rem !important;
-        }
-
-        /* 减少头像区域 */
-        .about-avatar {
-          width: 70px !important;
-          height: 70px !important;
-        }
-
-        .avatar-glow {
+        /* ========== 隐藏不需要的元素 ========== */
+        .scroll-progress, .cursor-glow, .back-to-top, .terminal-skip,
+        .hero-scroll, .hero-download, .navbar, .nav-overlay, .section-wave,
+        .avatar-glow, .avatar-border, .avatar-status, .avatar-border-inner,
+        .project-card-bg-text, .pdf-loading {
           display: none !important;
         }
 
-        /* 终端窗口紧凑 */
-        .terminal-window {
-          font-size: 0.68rem !important;
-          max-width: 100% !important;
-          border-radius: 8px !important;
+        /* ========== 所有 section 重置为 block ========== */
+        section, div, ul, ol, dl, form, figure, main {
+          display: block !important;
+        }
+
+        /* ========== Hero 终端区域 ========== */
+        .hero {
+          background: #0d1117 !important;
+          padding: 8mm 0 !important;
           min-height: auto !important;
         }
 
-        .terminal-body {
-          padding: 0.3rem 0.5rem !important;
-          line-height: 1.4 !important;
+        .terminal-window {
+          max-width: 100% !important;
+          background: #161b22 !important;
+          border-radius: 6px !important;
+          box-shadow: none !important;
+          font-size: 8pt !important;
           min-height: auto !important;
         }
 
         .terminal-header {
-          padding: 0.25rem 0.5rem !important;
+          padding: 4px 10px !important;
+          background: #21262d !important;
+          border-radius: 6px 6px 0 0 !important;
         }
 
-        .terminal-line {
-          margin-bottom: 0.1rem !important;
+        .terminal-dot {
+          width: 8px !important;
+          height: 8px !important;
+          display: inline-block !important;
+          border-radius: 50% !important;
+          margin-right: 4px !important;
         }
 
-        /* 项目卡片紧凑 */
-        .project-card {
-          padding: 0.5rem !important;
-          border-radius: 8px !important;
+        .terminal-body {
+          padding: 8px 12px !important;
           min-height: auto !important;
         }
 
-        .project-card-title {
-          font-size: 0.8rem !important;
-          margin-bottom: 0.2rem !important;
+        .terminal-line {
+          opacity: 1 !important;
+          margin-bottom: 2px !important;
+          font-size: 8pt !important;
+          line-height: 1.5 !important;
+          white-space: pre-wrap !important;
+          word-break: break-all !important;
         }
 
-        .project-card-desc {
-          font-size: 0.65rem !important;
-          line-height: 1.3 !important;
+        /* ========== About 区域 ========== */
+        .about {
+          padding: 6mm 0 !important;
+          background: #fefcf6 !important;
         }
 
-        .project-card-tag {
-          font-size: 0.6rem !important;
-          padding: 0.1rem 0.4rem !important;
+        .about-grid {
+          display: flex !important;
+          flex-direction: row !important;
+          align-items: flex-start !important;
+          gap: 12px !important;
         }
 
-        .project-card-emoji {
-          font-size: 1.2rem !important;
+        .about-avatar {
+          flex: 0 0 80px !important;
+          display: block !important;
+          text-align: center !important;
         }
 
-        .project-card-bg-text {
-          font-size: 3rem !important;
+        .avatar-wrapper {
+          position: static !important;
+          width: 70px !important;
+          height: 70px !important;
         }
 
-        /* GitHub 卡片紧凑 */
-        .github-card {
-          padding: 0.4rem !important;
-          border-radius: 6px !important;
+        .avatar-frame {
+          position: static !important;
+          width: 70px !important;
+          height: 70px !important;
+          border-radius: 50% !important;
+          overflow: hidden !important;
         }
 
-        .github-card-name {
-          font-size: 0.75rem !important;
-          margin-bottom: 0.15rem !important;
+        .avatar-frame img {
+          width: 100% !important;
+          height: 100% !important;
+          object-fit: cover !important;
+          display: block !important;
         }
 
-        .github-card-desc {
-          font-size: 0.6rem !important;
-          line-height: 1.3 !important;
-          margin-bottom: 0.3rem !important;
+        .avatar-name {
+          font-size: 9pt !important;
+          font-weight: bold !important;
+          margin-top: 4px !important;
         }
 
-        .github-card-lang {
-          font-size: 0.55rem !important;
+        .avatar-school {
+          font-size: 7pt !important;
+          color: #666 !important;
+          margin-top: 2px !important;
         }
 
-        .github-card-stars,
-        .github-card-forks {
-          font-size: 0.55rem !important;
+        .about-info {
+          flex: 1 !important;
+          display: block !important;
         }
 
-        /* 关于区域紧凑 */
         .about-bio {
-          font-size: 0.75rem !important;
-          line-height: 1.4 !important;
-        }
-
-        .about-highlight-item {
-          font-size: 0.7rem !important;
-          padding: 0.3rem 0.5rem !important;
+          font-size: 8.5pt !important;
+          line-height: 1.6 !important;
+          margin-bottom: 6px !important;
         }
 
         .about-highlights {
-          gap: 0.3rem !important;
+          display: block !important;
         }
 
-        /* 获奖区域 */
-        .award-stat-number {
-          font-size: 1.3rem !important;
+        .highlight-item {
+          font-size: 8pt !important;
+          padding: 2px 0 !important;
+          line-height: 1.4 !important;
         }
 
-        .award-stat-label {
-          font-size: 0.6rem !important;
+        .highlight-item::before {
+          content: "• " !important;
+          color: #F4D758 !important;
+          font-weight: bold !important;
         }
 
-        .award-category-title {
-          font-size: 0.8rem !important;
-          margin-bottom: 0.3rem !important;
+        /* ========== 通用 section 标题 ========== */
+        .section-label {
+          font-size: 7pt !important;
+          color: #888 !important;
+          text-transform: uppercase !important;
+          letter-spacing: 2px !important;
+          margin-bottom: 2px !important;
         }
 
-        .award-text {
-          font-size: 0.7rem !important;
+        h2 {
+          font-size: 14pt !important;
+          margin-bottom: 6px !important;
+          color: #1a1a1a !important;
         }
 
-        .award-item {
-          padding: 0.3rem 0 !important;
+        h2 em {
+          color: #2B7FD8 !important;
+          font-style: normal !important;
         }
 
-        /* 时间线 */
-        .tl-content h3 {
-          font-size: 0.8rem !important;
-          margin-bottom: 0.15rem !important;
+        /* ========== Experience 时间线 ========== */
+        .experience {
+          padding: 6mm 0 !important;
         }
 
-        .tl-content p {
-          font-size: 0.7rem !important;
+        .timeline {
+          display: block !important;
+          position: static !important;
+          padding-left: 16px !important;
+          border-left: 2px solid #e0e0e0 !important;
         }
 
-        .tl-content .tl-company {
-          font-size: 0.7rem !important;
+        .timeline-line-progress {
+          display: none !important;
+        }
+
+        .tl-item {
+          position: static !important;
+          padding: 0 0 8px 12px !important;
+          margin-bottom: 4px !important;
+          break-inside: avoid !important;
+          page-break-inside: avoid !important;
         }
 
         .tl-dot {
+          position: absolute !important;
+          left: -21px !important;
+          top: 4px !important;
           width: 8px !important;
           height: 8px !important;
+          background: #2B7FD8 !important;
+          border-radius: 50% !important;
+          display: block !important;
         }
 
-        /* 联系区域 */
+        .tl-card {
+          display: block !important;
+          padding: 0 !important;
+          background: none !important;
+          border: none !important;
+          box-shadow: none !important;
+          border-radius: 0 !important;
+        }
+
+        .tl-year {
+          font-size: 7.5pt !important;
+          color: #2B7FD8 !important;
+          font-weight: bold !important;
+          margin-bottom: 2px !important;
+        }
+
+        .tl-content h3 {
+          font-size: 9.5pt !important;
+          margin-bottom: 1px !important;
+          color: #1a1a1a !important;
+        }
+
+        .tl-company {
+          font-size: 8pt !important;
+          color: #666 !important;
+          margin-bottom: 2px !important;
+        }
+
+        .tl-content p {
+          font-size: 8pt !important;
+          line-height: 1.5 !important;
+          color: #333 !important;
+        }
+
+        /* ========== Projects 项目卡片 ========== */
+        .projects {
+          padding: 6mm 0 !important;
+          background: #fefcf6 !important;
+        }
+
+        .project-grid {
+          display: block !important;
+        }
+
+        .project-card {
+          position: static !important;
+          display: block !important;
+          padding: 8px 10px !important;
+          margin-bottom: 6px !important;
+          border-radius: 6px !important;
+          min-height: auto !important;
+          overflow: visible !important;
+          break-inside: avoid !important;
+          page-break-inside: avoid !important;
+          /* 保留背景色 */
+        }
+
+        .project-card--1 { background: linear-gradient(135deg, #F4D758 0%, #F7A946 100%) !important; }
+        .project-card--2 { background: linear-gradient(135deg, #2B7FD8 0%, #1a5fa0 100%) !important; color: #fff !important; }
+        .project-card--3 { background: linear-gradient(135deg, #6C5CE7 0%, #a55eea 100%) !important; color: #fff !important; }
+        .project-card--4 { background: linear-gradient(135deg, #28c840 0%, #1a9c30 100%) !important; color: #fff !important; }
+
+        .project-card-content {
+          position: static !important;
+          display: block !important;
+        }
+
+        .project-card-emoji {
+          font-size: 14pt !important;
+          display: inline !important;
+          margin-right: 4px !important;
+        }
+
+        .project-card-title {
+          font-size: 10pt !important;
+          font-weight: bold !important;
+          display: inline !important;
+          margin-bottom: 0 !important;
+        }
+
+        .project-card-desc {
+          font-size: 8pt !important;
+          line-height: 1.4 !important;
+          margin-top: 3px !important;
+          color: inherit !important;
+          opacity: 0.9 !important;
+        }
+
+        .project-card-tag {
+          font-size: 7pt !important;
+          padding: 1px 6px !important;
+          background: rgba(255,255,255,0.2) !important;
+          border-radius: 3px !important;
+          display: inline-block !important;
+          margin-top: 3px !important;
+        }
+
+        /* ========== GitHub 开源项目 ========== */
+        .github {
+          padding: 6mm 0 !important;
+        }
+
+        .github-grid {
+          display: block !important;
+        }
+
+        .github-card {
+          display: block !important;
+          padding: 6px 8px !important;
+          margin-bottom: 4px !important;
+          border: 1px solid #e0e0e0 !important;
+          border-radius: 4px !important;
+          background: #fff !important;
+          break-inside: avoid !important;
+          page-break-inside: avoid !important;
+        }
+
+        .github-card-name {
+          font-size: 9pt !important;
+          font-weight: bold !important;
+          color: #2B7FD8 !important;
+          margin-bottom: 2px !important;
+        }
+
+        .github-card-desc {
+          font-size: 7.5pt !important;
+          line-height: 1.4 !important;
+          color: #555 !important;
+          margin-bottom: 3px !important;
+        }
+
+        .github-card-meta {
+          font-size: 7pt !important;
+          color: #888 !important;
+        }
+
+        .github-card-lang, .github-card-stars, .github-card-forks {
+          font-size: 7pt !important;
+          color: #888 !important;
+        }
+
+        /* ========== Awards 获奖 ========== */
+        .awards {
+          padding: 6mm 0 !important;
+          background: #fefcf6 !important;
+        }
+
+        .award-stats {
+          display: flex !important;
+          flex-direction: row !important;
+          gap: 12px !important;
+          margin-bottom: 8px !important;
+          break-inside: avoid !important;
+          page-break-inside: avoid !important;
+        }
+
+        .award-stat {
+          flex: 1 !important;
+          text-align: center !important;
+          padding: 4px !important;
+        }
+
+        .award-stat-number {
+          font-size: 16pt !important;
+          font-weight: bold !important;
+          color: #F4D758 !important;
+        }
+
+        .award-stat-label {
+          font-size: 7pt !important;
+          color: #888 !important;
+        }
+
+        .award-category-title {
+          font-size: 9pt !important;
+          font-weight: bold !important;
+          margin-bottom: 3px !important;
+          margin-top: 6px !important;
+          color: #1a1a1a !important;
+        }
+
+        .award-item {
+          padding: 2px 0 !important;
+          margin-bottom: 2px !important;
+          break-inside: avoid !important;
+          page-break-inside: avoid !important;
+        }
+
+        .award-text {
+          font-size: 8pt !important;
+          line-height: 1.4 !important;
+          color: #333 !important;
+        }
+
+        .award-year {
+          font-size: 7pt !important;
+          color: #888 !important;
+        }
+
+        /* ========== Skills 技能 ========== */
+        .skills {
+          padding: 6mm 0 !important;
+        }
+
+        .skill-grid {
+          display: block !important;
+        }
+
+        .skill-category {
+          margin-bottom: 6px !important;
+          break-inside: avoid !important;
+          page-break-inside: avoid !important;
+        }
+
+        .skill-category-title {
+          font-size: 9pt !important;
+          font-weight: bold !important;
+          margin-bottom: 3px !important;
+          color: #1a1a1a !important;
+        }
+
+        .skill-tags {
+          display: flex !important;
+          flex-wrap: wrap !important;
+          gap: 3px !important;
+        }
+
+        .skill-tag {
+          font-size: 7.5pt !important;
+          padding: 2px 6px !important;
+          background: #f0f0f0 !important;
+          border-radius: 3px !important;
+          color: #333 !important;
+          display: inline-block !important;
+        }
+
+        /* ========== Contact 联系 ========== */
+        .contact {
+          padding: 6mm 0 !important;
+          background: #fefcf6 !important;
+          text-align: center !important;
+        }
+
         .contact-info {
-          font-size: 0.75rem !important;
+          font-size: 8.5pt !important;
         }
 
         .contact-link {
-          font-size: 0.75rem !important;
+          font-size: 8.5pt !important;
+          color: #2B7FD8 !important;
+          text-decoration: none !important;
+        }
+
+        /* ========== 分页控制 ========== */
+        .tl-item, .project-card, .github-card, .award-item, .skill-category,
+        .terminal-window, .about-grid, .award-stats {
+          break-inside: avoid !important;
+          page-break-inside: avoid !important;
+        }
+
+        .section-label, h2, h3, .tl-year, .award-category-title, .skill-category-title {
+          break-after: avoid !important;
+          page-break-after: avoid !important;
+        }
+
+        /* ========== 链接样式 ========== */
+        a {
+          color: #2B7FD8 !important;
+          text-decoration: none !important;
         }
       `
     });
 
-    // 预处理：强制显示所有动画元素，隐藏交互元素
-    console.log('🎨 正在优化页面样式...');
+    // DOM 预处理
+    console.log('🔧 正在处理 DOM...');
     await page.evaluate(() => {
-      // 强制显示所有动画元素
+      // 显示所有动画元素
       document.querySelectorAll('.fade-up, .tl-item, .github-card, .award-item, .skill-card, .skill-tag').forEach(el => {
         el.classList.add('is-visible');
         el.style.opacity = '1';
-        el.style.transform = 'none';
-        el.style.transition = 'none';
       });
 
-      // 隐藏交互元素和装饰元素
-      document.querySelectorAll('.scroll-progress, .cursor-glow, .back-to-top, .terminal-skip, .hero-scroll, .hero-download, .navbar, .nav-overlay, .section-wave, .avatar-glow').forEach(el => {
-        el.style.display = 'none';
-      });
+      // 隐藏装饰元素
+      document.querySelectorAll('.scroll-progress, .cursor-glow, .back-to-top, .terminal-skip',
+        '.hero-scroll, .hero-download, .navbar, .nav-overlay, .section-wave',
+        '.avatar-glow, .avatar-border, .avatar-status, .avatar-border-inner',
+        '.project-card-bg-text, .pdf-loading, .timeline-line-progress'
+      ).forEach(el => el.style.display = 'none');
 
-      // 调整 hero 区域
-      const hero = document.querySelector('.hero');
-      if (hero) {
-        hero.style.minHeight = 'auto';
-        hero.style.padding = '0.8rem';
-      }
+      // 终端行全部可见
+      document.querySelectorAll('.terminal-line').forEach(el => el.style.opacity = '1');
 
-      // 终端窗口去掉阴影
-      const terminal = document.querySelector('.terminal-window');
-      if (terminal) {
-        terminal.style.boxShadow = 'none';
-      }
-
-      // 确保所有终端行可见
-      document.querySelectorAll('.terminal-line').forEach(el => {
-        el.style.opacity = '1';
-      });
-
-      // 压缩所有 section 的间距
-      document.querySelectorAll('section').forEach(el => {
-        el.style.paddingTop = '0.6rem';
-        el.style.paddingBottom = '0.6rem';
-      });
-
-      // 压缩各区域内部容器间距
-      document.querySelectorAll('.about-inner, .experience-inner, .projects-inner, .github-inner, .awards-inner, .skills-inner, .contact-inner').forEach(el => {
-        el.style.paddingTop = '0.4rem';
-        el.style.paddingBottom = '0.4rem';
-      });
-
-      // 压缩卡片间距
-      document.querySelectorAll('.project-grid, .github-grid').forEach(el => {
-        el.style.gap = '0.5rem';
-      });
-
-      // 压缩时间线间距
-      document.querySelectorAll('.tl-item').forEach(el => {
-        el.style.paddingBottom = '0.3rem';
-        el.style.marginBottom = '0.3rem';
-      });
-
-      // 获奖数字确保显示
+      // 获奖数字显示
       document.querySelectorAll('.award-stat-number').forEach(el => {
-        const target = el.dataset.target;
-        el.textContent = target;
+        el.textContent = el.dataset.target;
       });
 
-      // 将 Grid 布局改为 Block 布局（直接修改 DOM）
-      document.querySelectorAll('.project-grid, .github-grid').forEach(el => {
-        el.style.display = 'block';
-      });
-
-      // 给卡片添加下边距
-      document.querySelectorAll('.project-card').forEach(el => {
-        el.style.marginBottom = '0.5rem';
-      });
-      document.querySelectorAll('.github-card').forEach(el => {
-        el.style.marginBottom = '0.3rem';
-      });
-
-      // 确保所有容器允许分页
-      document.querySelectorAll('.project-grid, .github-grid, .timeline, .award-list, .skill-grid').forEach(el => {
-        el.style.overflow = 'visible';
-      });
-
-      // 确保卡片没有 transform 等影响分页的属性
-      document.querySelectorAll('.project-card, .github-card, .tl-item, .award-item').forEach(el => {
-        el.style.transform = 'none';
-        el.style.position = 'static';
-        el.style.willChange = 'auto';
+      // highlight-item 添加 bullet（如果还没有）
+      document.querySelectorAll('.highlight-item').forEach(el => {
+        if (!el.textContent.startsWith('•')) {
+          el.prepend('• ');
+        }
       });
     });
 
@@ -418,10 +563,10 @@ async function generatePDF() {
       format: 'A4',
       printBackground: true,
       margin: {
-        top: '4mm',
-        right: '6mm',
-        bottom: '4mm',
-        left: '6mm'
+        top: '8mm',
+        right: '10mm',
+        bottom: '8mm',
+        left: '10mm'
       },
       preferCSSPageSize: false,
       displayHeaderFooter: false
