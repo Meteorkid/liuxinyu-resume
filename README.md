@@ -1,3 +1,5 @@
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue)](./LICENSE)
+
 # 刘鑫宇个人简历网站
 
 个人简历网站，展示全栈开发技能、开源项目与实习经历。
