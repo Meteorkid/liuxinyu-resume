@@ -2193,23 +2193,9 @@ section { position: relative; }
   const downloadBtn = document.getElementById('heroDownload');
   if (!downloadBtn) return;
 
-  // 设置下载链接
+  // PDF 已随仓库发布，直接下载即可
   downloadBtn.href = '刘鑫宇-简历-全面展示版.pdf';
   downloadBtn.download = '刘鑫宇-简历-全面展示版.pdf';
-
-  // 点击时检查文件是否存在
-  downloadBtn.addEventListener('click', async (e) => {
-    try {
-      const response = await fetch('刘鑫宇-简历-全面展示版.pdf', { method: 'HEAD' });
-      if (!response.ok) {
-        e.preventDefault();
-        alert('请先运行以下命令生成 PDF：\n\nnpm run pdf');
-      }
-    } catch (error) {
-      e.preventDefault();
-      alert('请先运行以下命令生成 PDF：\n\nnpm run pdf');
-    }
-  });
 })();
 </script>
 </body>
