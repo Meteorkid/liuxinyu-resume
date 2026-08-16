@@ -16,7 +16,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 const HTML_FILE = resolve(__dirname, 'index.html');
-const PDF_FILE = resolve(__dirname, '刘鑫宇_全栈开发工程师_简历.pdf');
+const PDF_FILE = resolve(__dirname, '刘鑫宇-简历-网页版.pdf');
 
 async function generatePDF() {
   console.log('🚀 正在启动浏览器...');

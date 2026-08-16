@@ -2194,13 +2194,13 @@ section { position: relative; }
   if (!downloadBtn) return;
 
   // 设置下载链接
-  downloadBtn.href = '刘鑫宇_全栈开发工程师_简历.pdf';
-  downloadBtn.download = '刘鑫宇_全栈开发工程师_简历.pdf';
+  downloadBtn.href = '刘鑫宇-简历-全面展示版.pdf';
+  downloadBtn.download = '刘鑫宇-简历-全面展示版.pdf';
 
   // 点击时检查文件是否存在
   downloadBtn.addEventListener('click', async (e) => {
     try {
-      const response = await fetch('刘鑫宇_全栈开发工程师_简历.pdf', { method: 'HEAD' });
+      const response = await fetch('刘鑫宇-简历-全面展示版.pdf', { method: 'HEAD' });
       if (!response.ok) {
         e.preventDefault();
         alert('请先运行以下命令生成 PDF：\n\nnpm run pdf');

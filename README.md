@@ -62,7 +62,7 @@ liuxinyu-resume/
 ├── generate-pdf.mjs                # PDF 生成脚本
 ├── 大头照.jpg                       # 头像原图
 ├── 设计思路与创意亮点.md            # 设计文档
-└── 刘鑫宇_全栈开发工程师_简历.pdf   # 生成的 PDF
+└── 刘鑫宇-简历-全面展示版.pdf   # 生成的 PDF
 ```
 
 ## 更新日志
